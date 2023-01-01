@@ -33,10 +33,8 @@ import pdfrw
 import glob
 from pdfrw import PdfReader, PdfWriter
 
-from evaluation.evaluation_config import EvaluationConfig
-from evaluation.metrics_evaluator import MetricsEvaluator
-from evaluation.results_loader import ResultsLoader
-from pa_demand_forecast.raw_forecast_tft.model_builder_trainer.structure_data import \
+
+from model_builder_trainer.structure_data import \
     StructuringDataset
 import mlflow
 from datetime import datetime, timedelta
@@ -156,24 +154,6 @@ class Predict:
 
         return result_tft_df
 
-    def evaluate(self, actual_df, tmfrm_nm):
-        """Evaluates results for the test dataset"""
-        evaln_cnfg_path = Path(__file__).parent / f'evaluation_config.yaml'
-        config_ls = [evaln_cnfg_path]
-        evaln_config = EvaluationConfig(config_ls)
-        self.train_test_config.override_config(evaln_config._config_dict, self.train_test_config._config_dict)
-
-        #If tmfrm_nm not in time frames of the evaluation config then pop the time frame key from the dictionary
-        for key in evaln_config._config_dict["timeframes"].keys():
-            if key != tmfrm_nm:
-                del evaln_config._config_dict["timeframes"][key]
-
-        rslts_ldr = ResultsLoader(evaln_config)
-        rslts_dict = rslts_ldr.load_forecast_results(tmfrm_nm, load_ai=False, load_actual=True, load_legacy=True)
-        rslts_ldr.close_db_connections()
-        experiment_name = self.train_test_config.get_custom_param("mlflow_experiment_name")
-        metrics_evaltr = MetricsEvaluator(rslts_dict, mlflow_exp_id=mlflow.get_experiment_by_name(experiment_name).experiment_id)
-        metrics_dict = metrics_evaltr.evaluate_stats(min_visibility=self.train_test_config.get_custom_param('min_visibility'))
 
 
 

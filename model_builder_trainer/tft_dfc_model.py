@@ -4,11 +4,11 @@ import mlflow
 from pa_core.config import TrainTestPipelineConfig
 from pa_core.model.model import BaseModel
 
-from pa_demand_forecast.raw_forecast_tft.model_builder_trainer.optuna_tuning import OptunaTuning
-from pa_demand_forecast.raw_forecast_tft.model_builder_trainer.tft_model_definition import TFTModelDefinition
-from pa_demand_forecast.raw_forecast_tft.model_builder_trainer.structure_data import \
+from model_builder_trainer.optuna_tuning import OptunaTuning
+from model_builder_trainer.tft_model_definition import TFTModelDefinition
+from model_builder_trainer.structure_data import \
     StructuringDataset
-from pa_demand_forecast.raw_forecast_tft.predict.predict import Predict
+from predict.predict import Predict
 
 from pathlib import Path
 

@@ -3,7 +3,7 @@ TrainTestPipelineConfig:
   custom_parameters:
     scaler_name: MinMaxScaler
 #***************************** MLFLOW ***********************************************************
-    file_path: "All_data/CF_physics_19dec_Annova.csv"
+
 
 
     mlflow_experiment_name: TFT_not_serious
@@ -27,7 +27,8 @@ TrainTestPipelineConfig:
       save_imputed_featureengineered_df: False
       save_imputed_featureengineered_df_filename: data/after_fillingna_complete_s.pkl"
 
-
+    fusionforecast:
+      file_path: "data/CF_physics_19dec_Annova.csv"
 
     imputemissingvalues:
       load_imputed_df: False
@@ -122,6 +123,7 @@ TrainTestPipelineConfig:
 
     tftdfcmodel:
       run_type: "train"    #choose between (train, optuna_tune, predict, find_lr)
+
 
 
     # Existing custom parameters which could be useful to me
@@ -264,3 +266,7 @@ TrainTestPipelineConfig:
 #        historic_date: 01.07.2018
 #        reference_date: 30.06.2019
 #        start_date: 01.07.2019
+LoggerConfig:
+  log_directory: log
+  log_name_prefix: traintest_
+  log_level: DEBUG
