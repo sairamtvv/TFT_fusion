@@ -22,7 +22,7 @@ class FeatureEngineering:
         """Add additional features"""
         #todo: add holidays and also covid data given by Adrian
 
-        self.data["time_idx"] = (round(((self.data["year"] - self.data["year"].min())))).astype(int)
+        self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
 
 
 

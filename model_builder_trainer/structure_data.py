@@ -62,33 +62,29 @@ class StructuringDataset:
 
     def dont_include(self):
 
-        dont_include = ["NAME", "REGION_ID", "REGION_ALIAS", "TIMEFRAME_ID","FIRST_DAY_OF_TIMEFRAME"] + \
+        ['SYSTEM', 'index', 'NEW_RESEARCHERS', 'CUM_NO_RESEARCHERS', 'YEAR',
+         ]
+
+        dont_include = ["index", "New_researchers", "Cumulative_number_of_researchers", "TIMEFRAME_ID","FIRST_DAY_OF_TIMEFRAME"] + \
                        [ "LAST_DAY_OF_TIMEFRAME", "OBJECT_ID", "REGION_ALIAS" ]
         because_null = ["INPL"]
 
     def get_static_reals(self):
-        static_reals = list(self.data.filter(like="embed"))
+        static_reals = []
         return static_reals
 
     def get_time_varying_known_reals(self):
         #todo: check W_CAMPAIGN_PR and W_CAMPAIGN_CT are they reals are category
         #todo: Add style_id as category
-        time_varying_known_reals = ["EC_SP_TEUR", "CUM_CAT_SP_TEUR", "W_CAMPAIGN_PR",
-                                    "A_CAMPAIGN_CT"] + \
-                                   ["A_CAMPAIGN_PR", "FINVK", "FTOT", "W_CAMPAIGN_CT",
-                                    "VISIBILITY_AVG_PCT"]
+        time_varying_known_reals = ['DIFUSION_COEFFICIENT', 'SCREENING_POTENTIAL', 'REPRODUCIBILITY'] + \
+                                   ['DISCREPANCY', 'MEASUREMENT_FLAW']
         return time_varying_known_reals
 
     def get_time_varying_known_categoricals(self):
         #todo:Do you want to add style id as an  category
         #todo: Add null_info null_cat for category as columns to model_builder_trainer
         #todo: Check if we want to add the cyclical encoding
-        time_varying_known_categoricals = ["REFERENCE_MONTH", "REFERENCE_WEEK", "WEEK_OF_MONTH",
-                                           "COLL_NAME"] + \
-                                          ["MP_ENABLED_ISO", "SHOPASS", ] + \
-                                          ["GENDER", "U_PRODUCTLINE", "AGE_DETAIL"] + \
-                                          ["EK", "COLLECTION", "PRODUCTLINE", "SEASONALITY"] + \
-                                          ["covid", "DEPT"]
+        time_varying_known_categoricals = ['SYSTEM']
 
         return time_varying_known_categoricals
 
@@ -96,19 +92,16 @@ class StructuringDataset:
 
     def get_static_categoricals(self):
         #todo: Add style here
-        static_categoricals = ["ITEM_ID","COLL_TYP_NAME"]
+        static_categoricals = []
         return static_categoricals
 
 
 
 
     def get_time_varying_unknown_reals(self):
-        time_varying_unknown_reals = ["DEMAND_POT_PAST_52W", "DEMAND_POT_PAST_4W", "DEMAND_POT_PAST_10W",
-                        "DEMAND_POT_GLOBAL_PAST_52W", "MP_ENABLED_ISO_PAST_10W", "MP_ENABLED_ISO_PAST_52W",
-                        "MP_ENABLED_ISO_PAST_4W", "DEMAND_PRODUCT_LINE_4W", "DEMAND_PRODUCT_LINE_8W",
-                        "DEMAND_PRODUCT_LINE_52W", "MP_ENABLED_SAME_MONTH", "DEMAND_POT_SAME_MONTH",
-                        "SALES_WEEKS_SAME_MONTH", "SALES_WEEKS_52W", "SALES_WEEKS_10W","DEMAND_PCS","log_DEMAND_POT",
-                         "demand_pot_lagged_1","demand_pot_lagged_2"]
+        time_varying_unknown_reals = ['YES', 'NO', 'Y_AVG', 'X_NORM', 'YT_AVERAGE', 'Z_FACTOR',
+         'SUM_OF_SQUARES', 'SS_TOTAL',  'DOF_AVG', 'log_ANNOVA_NORM', 'avg_ANNOVA_NORM_by_SYSTEM',
+         'ANNOVA_NORM_lagged_1', 'ANNOVA_NORM_lagged_2']
 
         return time_varying_unknown_reals
 
@@ -124,17 +117,12 @@ class StructuringDataset:
         self.data[self.get_time_varying_known_reals()] = self.data[self.get_time_varying_known_reals()].astype(float).astype("float32")
         self.data[self.get_time_varying_unknown_reals()] = self.data[self.get_time_varying_unknown_reals()].astype(float).astype("float32")
 
-        self.data["DEMAND_POT"] = self.data["DEMAND_POT"].astype(float).astype("float32")
+        self.data["ANNOVA_NORM"] = self.data["ANNOVA_NORM"].astype(float).astype("float32")
         self.data['time_idx'] = self.data['time_idx'].apply(np.int64)
         assert(self.data["time_idx"].dtype.kind == "i"), "time_idx must be of type integer (i)"
 
     def rename_columns(self):
-        """If not renamed error is encountered """
-        self.data.rename(columns = {'AGE_DETAIL_Erw. altersunabhg.':'AGE_DETAIL_Erw_altersunabhg',
-                     'AGE_DETAIL_Erw. jünger':'AGE_DETAIL_Erwjunger',
-                     'AGE_DETAIL_Erw. älter':'AGE_DETAIL_Erw_alter',
-                     'AGE_DETAIL_Kinder altersunabhg. (92-182)':'AGE_DETAIL_Kinder_altersunabhg(92-182)',
-                     'U_PRODUCTLINE_Sonst. Möbel':'U_PRODUCTLINE_SonstMobel'}, inplace = True)
+       pass
 
 
 
@@ -192,8 +180,8 @@ class StructuringDataset:
         training = TimeSeriesDataSet(
             self.data[lambda x: x.time_idx <= training_cutoff],
             time_idx="time_idx",
-            target="DEMAND_POT",
-            group_ids=["ITEM_ID"],
+            target="ANNOVA_NORM",
+            group_ids=["SYSTEM"],
             #weight="weight",
             min_encoder_length=self.min_encoder_length,
             # keep encoder length long (as it is in the validation set)
@@ -210,9 +198,7 @@ class StructuringDataset:
             time_varying_known_reals=["time_idx"] + self.get_time_varying_known_reals(),
             # time_varying_unknown_categoricals=[],
             time_varying_unknown_reals=[
-                                           "DEMAND_POT",
-                                           "avg_DEMAND_POT_by_item",
-                                           "avg_DEMAND_POT_by_productline"
+                                           'ANNOVA_NORM',
                                        ] + self.get_time_varying_unknown_reals(),
             allow_missing_timesteps=True,
 

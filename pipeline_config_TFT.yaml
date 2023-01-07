@@ -6,7 +6,7 @@ TrainTestPipelineConfig:
 
 
 
-    mlflow_experiment_name: TFT_not_serious
+    mlflow_experiment_name: fusion_forecast_not_serious
     run_name: "first run"     #run_name is  folder name , also run_name for mlflow
     run_description: "Please write a description of your run here"           #Please write a description of your run here, why you want to run
     my_custom_tag: checkrun_notserious
@@ -14,26 +14,19 @@ TrainTestPipelineConfig:
     log_models: True
 
     is_real_prediction: False
-
-
-    include_product_raw_attrs: False
-    perform_scaling_and_encoding: True
     run_pipeline_from_dataframe: False                #runs training and prediction from a data frame
 
     datapreprocessor:
-      col_type: S
-      has_minimum_timestamps: True
-      Minimum_timestamps: 100
+
       save_imputed_featureengineered_df: False
       save_imputed_featureengineered_df_filename: data/after_fillingna_complete_s.pkl"
 
     fusionforecast:
-      file_path: "data/CF_physics_19dec_Annova.csv"
+      file_path: "data/CF_physics_Jan6,23_Annova.csv"
 
     imputemissingvalues:
       load_imputed_df: False
       load_imputed_df_name: data/after_fillingna_complete_s.pkl
-      lowest_visibility: 0.1      #clipping the lowest visibility
 
 
     structuringdataset:
@@ -45,16 +38,16 @@ TrainTestPipelineConfig:
 
 
       #making time series dataset from the data frame
-      max_prediction_length: 26
-      max_encoder_length: 13                                # how much past to look into
-      min_encoder_length: 7                                 # Item_IDS which does not possess minimum encoder length are removed
+      max_prediction_length: 10
+      max_encoder_length: 5                                # how much past to look into
+      min_encoder_length: 5                                 # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
       - ITEM_ID                   # grouping might give better averages on grouping
       #- STYLE_ID                 # one among PRODUCTLINE or STYLE can be used
      # - PRODUCTLINE              # giving all the three levels to group and predict, not sure if good idea to do it
       batch_size: 32           #32 was good
-      num_workers: 1         # number of workers (CPUS to use in parallel)
+      num_workers: 8         # number of workers (CPUS to use in parallel)
 
     predict_class:
 
@@ -110,7 +103,7 @@ TrainTestPipelineConfig:
       early_stop_callback_patience: 10          # Number of epochs to wait before stopping the run, if the validation error doesnot improve
 
       tensorboard_log_dir : lightning_logs
-      quick_debug: True
+      quick_debug: False
 
 
 
