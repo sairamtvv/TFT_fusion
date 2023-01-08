@@ -59,6 +59,9 @@ class TFTDFCModel():
             tensorboard_log_dir = f"{Path(os.getcwd())}/All_data/" + self.train_test_config.get_custom_param("run_name")
             lightning_dir = f'{tensorboard_log_dir}/lightning_logs/'
             mlflow.log_artifacts(lightning_dir)
+
+            self.predict(best_model_path)
+
             return best_model_path
 
         elif self.run_type == "optuna_tune":
@@ -86,11 +89,11 @@ class TFTDFCModel():
 
 
 
-    def predict(self, best_model_path,  log_file_location):
+    def predict(self, best_model_path):
 
 
         predict_obj = Predict(self.data, self.train_test_config)
-        result_df = predict_obj.predict(best_model_path,  log_file_location)
+        result_df = predict_obj.predict(best_model_path)
 
         return result_df
 

@@ -26,14 +26,12 @@ from pytorch_forecasting.data.encoders import NaNLabelEncoder
 from sklearn.preprocessing import RobustScaler, MinMaxScaler, StandardScaler
 
 from pathlib import Path
-from pa_demand_forecast.raw_forecast_tft.model_builder_trainer.structure_data import \
-    StructuringDataset
+from model_builder_trainer.structure_data import StructuringDataset
 import mlflow
 
 
-from pa_demand_forecast.raw_forecast_tft.predict.interpret_tft_postpredict import \
-    InterpretTFTPostPredict
-from pa_demand_forecast.raw_forecast_tft.predict.tft_evaluate import EvaluateTFT
+from predict.interpret_tft_postpredict import InterpretTFTPostPredict
+from predict.tft_evaluate import EvaluateTFT
 import logging
 logger = logging.getLogger(__name__)
 
@@ -95,7 +93,7 @@ class Predict:
 
 
         result_tft_df = self.make_tft_predictions_df(best_tft, val_dataloader, new_pred, new_x, new_index)
-        result_tft_df = self.get_desired_df_for_gross_forecast(result_tft_df)
+        #result_tft_df = self.get_desired_df_for_gross_forecast(result_tft_df)
 
 
         # interpretation
@@ -105,15 +103,15 @@ class Predict:
 
 
 
-        # Evaluation and comparision with the other models
-        if fcst_tmfrm_nm is None:
-            fcst_tmfrm_nm = "validation"
+        # # Evaluation and comparision with the other models
+        # if fcst_tmfrm_nm is None:
+        #     fcst_tmfrm_nm = "validation"
 
         #todo: check if self.data contains train+test data by now
         evaluatetft_obj = EvaluateTFT(self.data, self.train_test_config)
-        rslts_dict = evaluatetft_obj.evaluate(fcst_tmfrm_nm, best_model_path, result_tft_df)
-        evaluatetft_obj.visualize_individual_items(rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
-                                   new_index_raw, new_index, new_x, new_pred)
+        # rslts_dict = evaluatetft_obj.evaluate(fcst_tmfrm_nm, best_model_path, result_tft_df)
+        # evaluatetft_obj.visualize_individual_items(rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
+        #                            new_index_raw, new_index, new_x, new_pred)
 
         evaluatetft_obj.qqplot(result_tft_df)
 
@@ -186,7 +184,7 @@ class Predict:
         # #make a outer join with the new data
         # #self.data = pd.merge(old_train_df, self.data, how="outer", on=["time_idx", "ITEM_ID"])
         # self.data = self.get_only_train_data_from_df()
-        result_df = self.predict(logged_checkpoint_path, fcst_tmfrm_nm)
+        result_df = self.predict(logged_checkpoint_path)
 
 
 
@@ -220,22 +218,21 @@ class Predict:
             # print(len(pred_ts))
             decoder_length1 = new_x["decoder_time_idx"][i].tolist()
             # print(len(decoder_length1))
-            ITEM_ID = []
-            ITEM_ID.append(new_index["ITEM_ID"][i])
-            ITEM_ID = ITEM_ID * self.max_prediction_length
+            SYSTEM = []
+            SYSTEM.append(new_index["SYSTEM"][i])
+            SYSTEM = SYSTEM * self.max_prediction_length
             # *new_x["decoder_time_idx"].size()[1] # multipying by  26
             # print(len(ITEM_ID))
-            zipped = list(zip(actuals, pred_ts, decoder_length1, ITEM_ID))
+            zipped = list(zip(actuals, pred_ts, decoder_length1, SYSTEM))
             subtracted = [abs(x1 - x2) for (x1, x2) in zip(actuals, pred_ts)]
             mae = np.array(subtracted).mean()
             maelist.append(mae)
-            print(f"{ITEM_ID[0]}  = {mae}")
+            print(f"{SYSTEM[0]}  = {mae}")
             # print(list(zipped))
 
             [list1.append(item) for item in zipped]
 
-            df_tft = pd.DataFrame(list1, columns=["ACTUALS", 'RESULT', 'time_idx', "ITEM_ID"])
-            df_tft["ITEM_ID"] = df_tft["ITEM_ID"].astype(str).astype("float32")
+            df_tft = pd.DataFrame(list1, columns=["ACTUALS", 'RESULT', 'time_idx', "SYSTEM"])
             # RAW_COLUMN_LIST = ["PAI_REGION_ID","REGION_ALIAS","ITEM_ID","OBJECT_ID","PAI_TIMEFRAME_ID","RESULT","MP_ENABLED","PRODUCTLINE"]
         return df_tft
 

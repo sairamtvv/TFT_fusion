@@ -13,6 +13,7 @@ import datetime
 from icecream import install, ic
 
 from model_builder_trainer.tft_dfc_model import TFTDFCModel
+from predict.predict import Predict
 
 ic.configureOutput(prefix='TFT -> ')
 install()
@@ -62,6 +63,9 @@ class FusionForecast():
         mlflow.pytorch.autolog(log_every_n_step=log_every_n_step, log_models=log_models)
         best_model_path = tft_dfc_model_obj.train()
 
+    def predict(self):
+        prefict_obj = Predict(self.data, self.train_test_config)
+
 
 
 
@@ -107,6 +111,7 @@ if __name__ == "__main__":
         forecast_obj.impute_missing()
         forecast_obj.feature_engineer()
         forecast_obj.train_model()
+
 
 
 

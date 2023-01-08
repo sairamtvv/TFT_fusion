@@ -3,9 +3,7 @@ import mlflow
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from evaluation.evaluation_config import EvaluationConfig
-from evaluation.metrics_evaluator import MetricsEvaluator
-from evaluation.results_loader import ResultsLoader
+
 import torch
 from pytorch_forecasting.models.baseline import Baseline
 import pdfrw
@@ -71,27 +69,6 @@ class EvaluateTFT:
         return mae_tft
 
 
-    def get_legacy_actual_ann_data(self,  tmfrm_nm):
-        """Evaluates results for the test dataset"""
-        evaln_cnfg_path = Path(__file__).parent.parent.parent/ f'evaluation_config.yaml'
-        config_ls = [evaln_cnfg_path]
-        evaln_config = EvaluationConfig(config_ls)
-        self.train_test_config.override_config(evaln_config._config_dict, self.train_test_config._config_dict)
-
-
-        #If tmfrm_nm not in time frames of the evaluation config then pop the time frame key
-        # from the dictionary
-        lst_timeframes = list(evaln_config._config_dict["timeframes"].keys())
-        for key in lst_timeframes:
-            if key != tmfrm_nm:
-                del evaln_config._config_dict["timeframes"][key]
-
-        rslts_ldr = ResultsLoader(evaln_config)
-        logger.info("Querying to get legacy, actuals, and ANN data")
-        rslts_dict = rslts_ldr.load_forecast_results(tmfrm_nm, load_ai=True, load_actual=True,
-                                                     load_legacy=True)
-
-        return rslts_dict
 
 
     @staticmethod
