@@ -14,7 +14,7 @@ class FeatureEngineering:
     #todo: Recession should be included
     #todo: Adding weights column and using it for covariate shift
 
-    def quantile_normalize(df):
+    def quantile_normalize(self, df):
         """
         input: dataframe with numerical columns
         output: dataframe with quantile normalized values
@@ -39,15 +39,22 @@ class FeatureEngineering:
         self.data["METRIC"] = (self.data["YES"] + self.data["NO"]) * (self.data["YES"] - self.data["NO"])
 
         pivoted_data = self.data.pivot(index="YEAR", columns="SYSTEM", values="METRIC")
+
+
         quant_norm_pivot_data = self.quantile_normalize(pivoted_data)
 
+        quant_norm_pivot_data["YEAR"] = quant_norm_pivot_data.index
+
+        quant_norm_data = pd.melt(quant_norm_pivot_data, id_vars=['YEAR'], var_name=['SYSTEM'])
+        quant_norm_data.rename({"value": "QUANTILE_NORM"}, axis=1, inplace=True)
+
+        self.data  = pd.merge(quant_norm_data, self.data, how='inner', on=["YEAR", "SYSTEM"])
 
 
 
-
-        self.data["log_ANNOVA_NORM"] = np.log1p(self.data.ANNOVA_NORM)
-        self.data["avg_ANNOVA_NORM_by_SYSTEM"] = self.data.groupby(["time_idx", "SYSTEM"],
-                                                  observed=True).ANNOVA_NORM.transform("mean")
+        #self.data["log_QUANTILE_NORM"] = np.log1p(self.data.QUANTILE_NORM)
+        self.data["avg_QUANTILE_NORM_by_SYSTEM"] = self.data.groupby(["time_idx", "SYSTEM"],
+                                                  observed=True).QUANTILE_NORM.transform("mean")
 
 
     def check_inf_or_nan(self,  col_lst=None ):
@@ -58,7 +65,7 @@ class FeatureEngineering:
         These columns ("DEMAND_PCS", "VISIBILITY_AVG_PCT", "DEMAND_POT") definitely should not have NAN
         """
         if col_lst is None:
-            col_lst = ("log_ANNOVA_NORM", "avg_ANNOVA_NORM_by_SYSTEM","ANNOVA_NORM_lagged_1","ANNOVA_NORM_lagged_2" )
+            col_lst = ("avg_QUANTILE_NORM_by_SYSTEM","QUANTILE_NORM_lagged_1","QUANTILE_NORM_lagged_2" )
 
         for col_name in col_lst:
             nans_in_col = self.data[col_name].isnull().sum()
@@ -71,15 +78,15 @@ class FeatureEngineering:
         #todo: Adding any other useful lag
         #lag1 feature
         self.data = self.data.set_index(["SYSTEM"]).sort_values("time_idx")
-        self.data["ANNOVA_NORM_lagged_1"] = self.data["ANNOVA_NORM"].shift(periods=1)
+        self.data["QUANTILE_NORM_lagged_1"] = self.data["QUANTILE_NORM"].shift(periods=1)
 
-        self.data["ANNOVA_NORM_lagged_1"].fillna(method='ffill', inplace=True)
-        self.data["ANNOVA_NORM_lagged_1"].fillna(method='bfill', inplace=True)
+        self.data["QUANTILE_NORM_lagged_1"].fillna(method='ffill', inplace=True)
+        self.data["QUANTILE_NORM_lagged_1"].fillna(method='bfill', inplace=True)
 
         # lag2 feature
-        self.data["ANNOVA_NORM_lagged_2"] = self.data["ANNOVA_NORM"].shift(periods=2)
-        self.data["ANNOVA_NORM_lagged_2"].fillna(method='ffill', inplace=True)
-        self.data["ANNOVA_NORM_lagged_2"].fillna(method='bfill', inplace=True)
+        self.data["QUANTILE_NORM_lagged_2"] = self.data["QUANTILE_NORM"].shift(periods=2)
+        self.data["QUANTILE_NORM_lagged_2"].fillna(method='ffill', inplace=True)
+        self.data["QUANTILE_NORM_lagged_2"].fillna(method='bfill', inplace=True)
         self.data.reset_index(inplace=True)
 
     def feature_engineer(self):

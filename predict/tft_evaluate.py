@@ -68,69 +68,13 @@ class EvaluateTFT:
         mae_tft = ((val_actuals) - (val_predictions)).abs().mean().item()
         return mae_tft
 
+    def evaluate(self):
 
 
 
-    @staticmethod
-    def get_itemids_only_modeltrained(best_model_path, df, assert_nonempty=False):
-        """
-        Extract only those ITEM_IDS that are present in the trained model
-        and filter the df data based on those ITEM_IDS alone.
-        """
-        best_tft = TemporalFusionTransformer.load_from_checkpoint(best_model_path)
-        # train_df = pd.read_pickle(logged_train_data_path, compression="zip")
-        #
-        # self.data = pd.concat([train_df, self.data], axis=0)
-
-        # #todo: Check if dropping duplicates is required
-
-        dict_trained_item_ids = dict(best_tft.hparams)["embedding_labels"]["ITEM_ID"]
-        dict_trained_item_ids.pop("nan")
-        trained_item_ids_df = pd.DataFrame(list(dict_trained_item_ids.items()),
-                                           columns=['ITEM_ID', 'item_id_mapping'])
-        df["ITEM_ID"] = df["ITEM_ID"].astype(str)
-        df = pd.merge(trained_item_ids_df, df, how="inner", on=["ITEM_ID"])
-
-        if assert_nonempty:
-            assert len(df) > 0, "The trained item_ids and the obtained item_ids are different" \
-                                   " and no common ids among them"
-        return df
-
-    def prepare_df_for_visualization(self, tmfrm_nm, best_model_path, prediction_df):
-        """
-        Make a single data frame consisting of predictions (along with their quantiles), actuals,
-        ANN, tft, prophet so that the data frame itself can be used for plotting
-        """
-
-        rslts_dict = self.get_legacy_actual_ann_data(tmfrm_nm)
-        dict_df = {}
 
 
-        for key in rslts_dict.keys():
 
-            # df_trained_itemids = EvaluateTFT.get_itemids_only_modeltrained(best_model_path,
-            #                                                   rslts_dict[key])
-
-            if not rslts_dict[key].empty():
-                df_trained_itemids = pd.merge(df_trained_itemids, prediction_df, how="inner", on=["ITEM_ID","REFERENCE_YEAR","REFERENCE_WEEK"])
-                dict_df[key] = df_trained_itemids
-
-        #add the current tft so that model evaluator can give table and plots
-        prediction_df.rename(columns={'RESULTS': 'FORECAST_PCS'}, inplace=True)
-        dict_df["tft_current"] = prediction_df
-        return dict_df
-
-    def evaluate(self,tmfrm_nm, best_model_path, prediction_df):
-
-
-        rslts_dict = self.prepare_df_for_visualization(tmfrm_nm, best_model_path, prediction_df)
-        # TODO: Add comments for passing rslts_dict
-        metrics_evaltr = MetricsEvaluator(rslts_dict, mlflow_logging=True, plots_enabled=True)
-        metrics_dict = metrics_evaltr.evaluate_stats(
-            min_visibility=self.train_test_config.get_custom_param('min_visibility'))
-
-        del rslts_dict["tft_current"]
-        return rslts_dict
 
     def visualize_individual_items(self, rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
                                    new_index_raw, new_index, new_x, new_pred):
@@ -264,20 +208,4 @@ class EvaluateTFT:
 
         fig.savefig(f"{self.images_dir}/qqplot_Actuals_vs_TFT.png")
 
-    def get_production_data_and_compare(self, df_tft):
-        results_dict = self.get_legacy_actual_ann_data()
-
-        ann_forecast = self.data[
-            ["time_idx", "DFC_DEMAND_POT", "DEMAND_POT", "ITEM_ID", "FIRST_DAY_OF_TIMEFRAME"]]
-
-        merged_df = pd.merge(ann_forecast, df_tft, how="inner", on=["time_idx", "ITEM_ID"])
-
-        mae_actual_vs_tft = mean_absolute_error(merged_df["DEMAND_POT"],
-                                                merged_df["Predictions_tft"])
-
-        mae_actual_vs_ann = mean_absolute_error(merged_df["DEMAND_POT"],
-                                                merged_df["DFC_DEMAND_POT"])
-
-        print(f"mae_actual_vs_tft = {mae_actual_vs_tft}\n")
-        print(f"mae_actual_vs_ann = {mae_actual_vs_ann}\n")
 

@@ -22,7 +22,7 @@ TrainTestPipelineConfig:
       save_imputed_featureengineered_df_filename: data/after_fillingna_complete_s.pkl"
 
     fusionforecast:
-      file_path: "data/CF_physics_Jan6,23_Annova.csv"
+      file_path: "data/CF_physics_Jan20,23_a.csv"
 
     imputemissingvalues:
       load_imputed_df: False

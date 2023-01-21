@@ -100,8 +100,8 @@ class StructuringDataset:
 
     def get_time_varying_unknown_reals(self):
         time_varying_unknown_reals = ['YES', 'NO', 'Y_AVG', 'X_NORM', 'YT_AVERAGE', 'Z_FACTOR',
-         'SUM_OF_SQUARES', 'SS_TOTAL',  'DOF_AVG', 'log_ANNOVA_NORM', 'avg_ANNOVA_NORM_by_SYSTEM',
-         'ANNOVA_NORM_lagged_1', 'ANNOVA_NORM_lagged_2']
+         'SUM_OF_SQUARES',   'DOF_AVG', 'avg_QUANTILE_NORM_by_SYSTEM',
+         'QUANTILE_NORM_lagged_1', 'QUANTILE_NORM_lagged_2']
 
         return time_varying_unknown_reals
 
@@ -117,7 +117,7 @@ class StructuringDataset:
         self.data[self.get_time_varying_known_reals()] = self.data[self.get_time_varying_known_reals()].astype(float).astype("float32")
         self.data[self.get_time_varying_unknown_reals()] = self.data[self.get_time_varying_unknown_reals()].astype(float).astype("float32")
 
-        self.data["ANNOVA_NORM"] = self.data["ANNOVA_NORM"].astype(float).astype("float32")
+        self.data["QUANTILE_NORM"] = self.data["QUANTILE_NORM"].astype(float).astype("float32")
         self.data['time_idx'] = self.data['time_idx'].apply(np.int64)
         assert(self.data["time_idx"].dtype.kind == "i"), "time_idx must be of type integer (i)"
 
@@ -180,7 +180,7 @@ class StructuringDataset:
         training = TimeSeriesDataSet(
             self.data[lambda x: x.time_idx <= training_cutoff],
             time_idx="time_idx",
-            target="ANNOVA_NORM",
+            target="QUANTILE_NORM",
             group_ids=["SYSTEM"],
             #weight="weight",
             min_encoder_length=self.min_encoder_length,
@@ -198,7 +198,7 @@ class StructuringDataset:
             time_varying_known_reals=["time_idx"] + self.get_time_varying_known_reals(),
             # time_varying_unknown_categoricals=[],
             time_varying_unknown_reals=[
-                                           'ANNOVA_NORM',
+                                           'QUANTILE_NORM',
                                        ] + self.get_time_varying_unknown_reals(),
             allow_missing_timesteps=True,
 

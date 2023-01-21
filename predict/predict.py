@@ -109,15 +109,11 @@ class Predict:
 
         #todo: check if self.data contains train+test data by now
         evaluatetft_obj = EvaluateTFT(self.data, self.train_test_config)
-        # rslts_dict = evaluatetft_obj.evaluate(fcst_tmfrm_nm, best_model_path, result_tft_df)
+        evaluatetft_obj.evaluate()
         # evaluatetft_obj.visualize_individual_items(rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
         #                            new_index_raw, new_index, new_x, new_pred)
 
         evaluatetft_obj.qqplot(result_tft_df)
-
-
-
-
         evaluatetft_obj.log_all_prediction_to_mlflow(best_tft, val_dataloader, best_model_path)
 
         return result_tft_df
