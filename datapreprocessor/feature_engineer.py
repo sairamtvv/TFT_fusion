@@ -14,15 +14,34 @@ class FeatureEngineering:
     #todo: Recession should be included
     #todo: Adding weights column and using it for covariate shift
 
-
-
-
+    def quantile_normalize(df):
+        """
+        input: dataframe with numerical columns
+        output: dataframe with quantile normalized values
+        """
+        df_sorted = pd.DataFrame(np.sort(df.values,
+                                         axis=0),
+                                 index=df.index,
+                                 columns=df.columns)
+        df_mean = df_sorted.mean(axis=1)
+        df_mean.index = np.arange(1, len(df_mean) + 1)
+        df_qn = df.rank(method="min").stack().astype(int).map(df_mean).unstack()
+        return (df_qn)
 
     def add_features(self):
         """Add additional features"""
         #todo: add holidays and also covid data given by Adrian
 
         self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
+
+        self.data["PROB"] = self.data["YES"] / (self.data["YES"] + self.data["NO"])
+
+        self.data["METRIC"] = (self.data["YES"] + self.data["NO"]) * (self.data["YES"] - self.data["NO"])
+
+        pivoted_data = self.data.pivot(index="YEAR", columns="SYSTEM", values="METRIC")
+        quant_norm_pivot_data = self.quantile_normalize(pivoted_data)
+
+
 
 
 
