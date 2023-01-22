@@ -27,7 +27,7 @@ from torchmetrics import MeanAbsoluteError
 from pytorch_forecasting.data.encoders import NaNLabelEncoder
 from sklearn.preprocessing import RobustScaler, MinMaxScaler, StandardScaler
 
-from pa_core.config import TrainTestPipelineConfig
+
 
 #todo:Productline averages to be added along with group normalization
 

@@ -1,8 +1,7 @@
 import os
 
 import mlflow
-from pa_core.config import TrainTestPipelineConfig
-from pa_core.model.model import BaseModel
+
 
 from model_builder_trainer.optuna_tuning import OptunaTuning
 from model_builder_trainer.tft_model_definition import TFTModelDefinition
