@@ -43,10 +43,10 @@ TrainTestPipelineConfig:
       min_encoder_length: 5                                 # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
-      - ITEM_ID                   # grouping might give better averages on grouping
+      - SYSTEM                  # grouping might give better averages on grouping
       #- STYLE_ID                 # one among PRODUCTLINE or STYLE can be used
      # - PRODUCTLINE              # giving all the three levels to group and predict, not sure if good idea to do it
-      batch_size: 32           #32 was good
+      batch_size: 4           #32 was good
       num_workers: 8         # number of workers (CPUS to use in parallel)
 
     predict_class:

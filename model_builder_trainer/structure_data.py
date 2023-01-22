@@ -170,7 +170,7 @@ class StructuringDataset:
         max_encoder_length = self.max_encoder_length
         training_cutoff = self.data["time_idx"].max() - self.max_prediction_length
 
-        if len(self.group_ids) > 1:
+        if len(self.group_ids) == 1:
             target_normalizer = GroupNormalizer(groups=self.group_ids, transformation="softplus")
         else:
             target_normalizer = EncoderNormalizer(method="robust")
