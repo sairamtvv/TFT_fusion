@@ -34,7 +34,7 @@ class FeatureEngineering:
 
         self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
 
-        self.data["PROB"] = self.data["YES"] / (self.data["YES"] + self.data["NO"])
+
 
         self.data["METRIC"] = (self.data["YES"] + self.data["NO"]) * (self.data["YES"] - self.data["NO"])
 

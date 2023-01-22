@@ -2,6 +2,8 @@ import os
 import mlflow
 import numpy as np
 import pandas as pd
+import pathlib
+import shutil
 from pathlib import Path
 
 import torch
@@ -10,6 +12,11 @@ import pdfrw
 import glob
 from pdfrw import PdfReader, PdfWriter
 from matplotlib import pyplot as plt
+
+
+import numpy as np
+from scipy.interpolate import make_interp_spline
+from scipy.interpolate import interp1d
 
 from pytorch_forecasting.models import TemporalFusionTransformer
 import statsmodels.api as sm
@@ -52,7 +59,6 @@ class EvaluateTFT:
         mlflow.log_metric("MAE_TFT for val_load", mae_tft)
         mlflow.log_param("Best model path", best_model_path)
         mlflow.log_artifacts(self.images_dir)
-
         # mlflow.log_params(str(dict(best_tft.hparams)))
 
     def create_baseline_model(self, val_dataloader):
@@ -68,7 +74,6 @@ class EvaluateTFT:
         mae_tft = ((val_actuals) - (val_predictions)).abs().mean().item()
         return mae_tft
 
-    def evaluate(self):
 
 
 
@@ -76,14 +81,15 @@ class EvaluateTFT:
 
 
 
-    def visualize_individual_items(self, rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
+
+    def visualize_individual_items(self, best_tft, val_dataloader, new_pred_raw, new_x_raw,
                                    new_index_raw, new_index, new_x, new_pred):
         #todo: taken from jupyter notebook, need to understand what I wrote and refactor it
 
         def timeidx_2_date(lst_idx):
             lst_date = []
             for time_idx in lst_idx:
-                date_index = timedelta(days=7 * time_idx) + self.data["FIRST_DAY_OF_TIMEFRAME"].min()
+                date_index = time_idx + self.data["YEAR"].min()
                 lst_date.append(date_index)
             return lst_date
 
@@ -95,20 +101,6 @@ class EvaluateTFT:
         maelist = []
         actual_data = [(y[0]) for x, y in iter(val_dataloader)]
 
-        for key in rslts_dict.keys():
-
-            if key == "ACTUALS":
-                rslts_dict[key]["VISIBILITY_AVG_PCT"].clip(lower=0.1, inplace=True)
-                rslts_dict[key]["DEMAND_POT"] = rslts_dict[key]["DEMAND_PCS"] / rslts_dict[key][
-                    "VISIBILITY_AVG_PCT"]
-
-            elif key == "LEGACY":
-               pass
-
-            else:
-                rslts_dict[key]["VISIBILITY_AVG_PCT"].clip(lower=0.1, inplace=True)
-                rslts_dict[key]["DEMAND_POT"] = rslts_dict[key]["FORECAST_PCS"] / \
-                                                rslts_dict[key]["VISIBILITY_AVG_PCT"]
 
 
         for i in list(new_index.index):
@@ -129,7 +121,7 @@ class EvaluateTFT:
             # Preparation for plotting the Quantiles
             Quantiles_item = new_pred_raw[0][i, :, :]
 
-            float_itemid = float(new_index["ITEM_ID"][i])
+            float_itemid = (new_index["SYSTEM"][i])
             print(f"{float_itemid}  = {mae}")
 
             # # limits in time series to get the forecast for ANN model
@@ -138,41 +130,33 @@ class EvaluateTFT:
             # end = lst_prediction[-1]
             # print(f"start = {start} end = {end}")
 
-            train_data = self.data.loc[self.data["ITEM_ID"] == str(float_itemid), ["FIRST_DAY_OF_TIMEFRAME", "DEMAND_POT"]]
 
             fig, ax = plt.subplots(figsize=(25, 16))
 
             # Create a colour code cycler e.g. 'C0', 'C1', etc.
             colour_codes = map('C{}'.format, cycle(range(10)))
 
+            actual_df =self.data.loc[self.data["SYSTEM"] == float_itemid]
 
-            for key in rslts_dict.keys():
+            # X_Y_Spline = make_interp_spline(actual_df["YEAR"], actual_df['QUANTILE_NORM'])
+            # X_ = np.linspace(actual_df["YEAR"].min(), actual_df["YEAR"].max(), 50)
+            # Y_ = X_Y_Spline(X_)
+            # ax.plot(X_, Y_, linestyle='-', marker='s', color='#55a000', label="ACTUALS")
 
-                if key == "ACTUALS":
-                    actual_df = rslts_dict[key].loc[rslts_dict[key]["ITEM_ID"] == float_itemid]
-                    ax.plot( actual_df["FIRST_DAY_OF_TIMEFRAME"],  actual_df['DEMAND_POT'],
-                             linestyle='-.', marker='s', color='#55a000', label=key)
+            # cubic_interpolation = interp1d(actual_df["YEAR"], actual_df['QUANTILE_NORM'], kind="cubic")
+            # X_ = np.linspace(actual_df["YEAR"].min(), actual_df["YEAR"].max(), 500)
+            # Y_ = cubic_interpolation (X_)
+            # ax.plot(X_, Y_, linestyle='-', marker='s', color='#55a000', label="ACTUALS")
 
-                elif key == "LEGACY":
-                    legacy_df = rslts_dict[key].loc[rslts_dict[key]["ITEM_ID"] == float_itemid]
-                    ax.plot(legacy_df["FIRST_DAY_OF_TIMEFRAME"],
-                            legacy_df['FORECAST_PCS'],
-                            linestyle='--', marker='s', color='#6CF949', label=key)
-
-                else:
-                    model_df = rslts_dict[key].loc[rslts_dict[key]["ITEM_ID"] == float_itemid]
-                    ax.plot( model_df["FIRST_DAY_OF_TIMEFRAME"],
-                             model_df['DEMAND_POT'],
-                            linestyle='-.', marker='s', color=next(colour_codes), label=key)
-
+            ax.plot(actual_df["YEAR"], actual_df['QUANTILE_NORM'], linestyle='-', marker='s', color='#55a000', label="ACTUALS")
             textstr = f"without visibility cut MAE = {mae}"
             ax.text(0.45, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                     verticalalignment='top')
 
             plt.title(str(float_itemid), fontsize=25)
 
-            ax.plot(train_data["FIRST_DAY_OF_TIMEFRAME"], train_data["DEMAND_POT"], label='ACTUAL',
-                    marker="H", linestyle="-")
+            # ax.plot(train_data["FIRST_DAY_OF_TIMEFRAME"], train_data["DEMAND_POT"], label='ACTUAL',
+            #         marker="H", linestyle="-")
             ax.plot(decoder_length1_date, pred_ts, linestyle='--', marker='*', color='#ff7823',
                     label='TFT_FORECAST')
 
@@ -186,13 +170,20 @@ class EvaluateTFT:
 
             fig.savefig(f"{self.junk_dir}/{i}.pdf", format="pdf")
             plt.close()
+        self.merge_to_single_pdf()
 
     def merge_to_single_pdf(self):
 
         writer = PdfWriter()
         for inpfn in glob.glob(f"{self.junk_dir}/*.pdf"):
             writer.addpages(PdfReader(inpfn).pages)
-        writer.write(self.output_filename)
+        writer.write(f"{self.junk_dir}/{self.output_filename}")
+
+        my_file = pathlib.Path(f"{self.junk_dir}/{self.output_filename}")
+        to_file = pathlib.Path(f"{self.images_dir}/{self.output_filename}")
+        shutil.copy(my_file, to_file)
+        shutil.rmtree(self.junk_dir)
+
 
         #todo:copy the output file to previous directory and delete the junk directory
 

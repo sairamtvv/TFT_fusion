@@ -99,7 +99,7 @@ class Predict:
         # interpretation
         interpret_tft_obj = InterpretTFTPostPredict(self.data, self.train_test_config)
         interpret_tft_obj.interpret_model(best_tft, new_pred_raw)
-        #interpret_tft_obj.partial_dependency(best_tft, val_dataloader, lst_input_feat=None)
+        interpret_tft_obj.partial_dependency(best_tft, val_dataloader, lst_input_feat=None)
 
 
 
@@ -109,12 +109,18 @@ class Predict:
 
         #todo: check if self.data contains train+test data by now
         evaluatetft_obj = EvaluateTFT(self.data, self.train_test_config)
-        evaluatetft_obj.evaluate()
+
         # evaluatetft_obj.visualize_individual_items(rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
         #                            new_index_raw, new_index, new_x, new_pred)
 
         evaluatetft_obj.qqplot(result_tft_df)
+
+        evaluatetft_obj.visualize_individual_items(best_tft, val_dataloader, new_pred_raw,
+                                                   new_x_raw,
+                                                   new_index_raw, new_index, new_x, new_pred)
         evaluatetft_obj.log_all_prediction_to_mlflow(best_tft, val_dataloader, best_model_path)
+
+
 
         return result_tft_df
 

@@ -55,7 +55,7 @@ TrainTestPipelineConfig:
       toread_mlflow_run_id: 7fbcea5277bc46c6ad7fe5734137613d
       toread_mlflow_ckpt_filename: epoch=0-step=32.ckpt
       toread_mlflow_train_filename: TFT_12-14-2022__21-29-58_train_df.pkl     #this file contains both the train and the test data
-
+      output_filename: merged_pdf.pdf
 
 
 

@@ -37,10 +37,15 @@ class InterpretTFTPostPredict:
         extract their partial dependency and save their partial dependency plots
         """
         if lst_input_feat is None:
-            lst_input_feat = ["time_idx", "VISIBILITY_AVG_PCT", "MP_ENABLED_ISO",
-                              "CUM_CAT_SP_TEUR", "REFERENCE_WEEK", "REFERENCE_MONTH",
-                              "COLLECTION", "FTOT", "EC_SP_TEUR", "SEASONALITY",
-                              "WEEK_OF_MONTH"]
+            lst_input_feat = ["SYSTEM"] \
+                             + ['DOF_AVG',
+                              'DIFUSION_COEFFICIENT', 'SCREENING_POTENTIAL', 'REPRODUCIBILITY',
+                              'DISCREPANCY', 'MEASUREMENT_FLAW'] \
+
+                              # + ['SYSTEM', 'YEAR',  'time_idx', 'METRIC'] \
+                             # + ['avg_QUANTILE_NORM_by_SYSTEM', 'QUANTILE_NORM_lagged_1',
+                             #   'QUANTILE_NORM_lagged_2'] \
+                             # + ['NEW_RESEARCHERS', 'CUM_NO_RESEARCHERS',  ]
 
 
         for input_feature in lst_input_feat:
@@ -60,7 +65,7 @@ class InterpretTFTPostPredict:
                                                      mode="dataframe")
 
             # plotting median and 25% and 75% percentile
-            agg_dependency = dependency.groupby(input_feature).normalized_prediction.agg(
+            agg_dependency = dependency.groupby(input_feature).prediction.agg(
                 median="median", q25=lambda x: x.quantile(0.25), q75=lambda x: x.quantile(0.75)
             )
             ax = agg_dependency.plot(y="median")
