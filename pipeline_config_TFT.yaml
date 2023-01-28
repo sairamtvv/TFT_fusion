@@ -22,7 +22,7 @@ TrainTestPipelineConfig:
       save_imputed_featureengineered_df_filename: data/after_fillingna_complete_s.pkl"
 
     fusionforecast:
-      file_path: "data/CF_physics_Jan20,23_a.csv"
+      file_path: "data/CF_physics_Jan27,23.csv"
 
     imputemissingvalues:
       load_imputed_df: False
@@ -32,14 +32,14 @@ TrainTestPipelineConfig:
     structuringdataset:
       #encoding and normalization
       categorical_encoding : nanlabelencoder
-      static_numerical_scaler : none                           #(standard, minmax, robust, none), this is applied to reals
-      time_varying_unknown_numerical_scaler : robust         #(standard, minmax, robust, none), this is applied to reals
+      static_numerical_scaler :  none                           #(standard, minmax, robust, none), this is applied to reals
+      time_varying_unknown_numerical_scaler : none         #(standard, minmax, robust, none), this is applied to reals
       time_varying_known_numerical_scaler : none                #(standard, minmax, robust, none), this is applied to reals
 
 
       #making time series dataset from the data frame
-      max_prediction_length: 10
-      max_encoder_length: 5                                # how much past to look into
+      max_prediction_length: 4
+      max_encoder_length: 15                                # how much past to look into
       min_encoder_length: 5                                 # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
@@ -66,15 +66,15 @@ TrainTestPipelineConfig:
       #Model Parameterts
       accelerator: cpu
       devices: 1
-      max_epochs: 10
+      max_epochs: 30
       gpus: 0
-      gradient_clip_val : 0.05                      # clipping gradients is a hyperparameter and important to prevent divergance
+      gradient_clip_val : 0.1                     # clipping gradients is a hyperparameter and important to prevent divergance
                                                  # of the gradient for recurrent neural networks
-      learning_rate : 0.0001                           #very important
-      hidden_size :  5                            #most important hyperparameter apart from learning rate
-      attention_head_size : 1                    # number of attention heads. Set to up to 4 for large dataset
+      learning_rate : 0.001                           #very important
+      hidden_size :  12                            #most important hyperparameter apart from learning rate
+      attention_head_size : 3                   # number of attention heads. Set to up to 4 for large dataset
       dropout : 0.5                                 #between 0.1 and 0.3 are good values
-      hidden_continuous_size: 6                   # set to <= hidden_size
+      hidden_continuous_size: 6                  # set to <= hidden_size
       output_size: 7                             # number of quantiles to predict, the quantiles to predict are given below
                                                  #loss by default is kept as Quantileloss
 
@@ -100,7 +100,7 @@ TrainTestPipelineConfig:
 
       early_stop_callback_monitor: val_MAE      #(val_RMSE etc... can also monitored
       early_stop_callback_min_delta: 0.0001     #min validation error change to consoder for callback
-      early_stop_callback_patience: 10          # Number of epochs to wait before stopping the run, if the validation error doesnot improve
+      early_stop_callback_patience: 10         # Number of epochs to wait before stopping the run, if the validation error doesnot improve
 
       tensorboard_log_dir : lightning_logs
       quick_debug: False

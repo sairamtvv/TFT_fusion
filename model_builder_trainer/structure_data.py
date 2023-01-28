@@ -70,14 +70,14 @@ class StructuringDataset:
         because_null = ["INPL"]
 
     def get_static_reals(self):
-        static_reals = []
+        static_reals = ['DIFUSION_COEFFICIENT', 'SCREENING_POTENTIAL', 'REPRODUCIBILITY'] + \
+                                   ['DISCREPANCY', 'MEASUREMENT_FLAW']
         return static_reals
 
     def get_time_varying_known_reals(self):
         #todo: check W_CAMPAIGN_PR and W_CAMPAIGN_CT are they reals are category
         #todo: Add style_id as category
-        time_varying_known_reals = ['DIFUSION_COEFFICIENT', 'SCREENING_POTENTIAL', 'REPRODUCIBILITY'] + \
-                                   ['DISCREPANCY', 'MEASUREMENT_FLAW']
+        time_varying_known_reals = []
         return time_varying_known_reals
 
     def get_time_varying_known_categoricals(self):

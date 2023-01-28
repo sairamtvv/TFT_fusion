@@ -99,7 +99,7 @@ class Predict:
         # interpretation
         interpret_tft_obj = InterpretTFTPostPredict(self.data, self.train_test_config)
         interpret_tft_obj.interpret_model(best_tft, new_pred_raw)
-        interpret_tft_obj.partial_dependency(best_tft, val_dataloader, lst_input_feat=None)
+        #interpret_tft_obj.partial_dependency(best_tft, val_dataloader, lst_input_feat=None)
 
 
 
