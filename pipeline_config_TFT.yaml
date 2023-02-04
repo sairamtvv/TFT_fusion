@@ -32,15 +32,15 @@ TrainTestPipelineConfig:
     structuringdataset:
       #encoding and normalization
       categorical_encoding : nanlabelencoder
-      static_numerical_scaler :  none                           #(standard, minmax, robust, none), this is applied to reals
-      time_varying_unknown_numerical_scaler : none         #(standard, minmax, robust, none), this is applied to reals
-      time_varying_known_numerical_scaler : none                #(standard, minmax, robust, none), this is applied to reals
+      static_numerical_scaler :  standard                           #(standard, minmax, robust, none), this is applied to reals
+      time_varying_unknown_numerical_scaler : standard         #(standard, minmax, robust, none), this is applied to reals
+      time_varying_known_numerical_scaler : standard                #(standard, minmax, robust, none), this is applied to reals
 
 
       #making time series dataset from the data frame
       max_prediction_length: 4
-      max_encoder_length: 15                                # how much past to look into
-      min_encoder_length: 5                                 # Item_IDS which does not possess minimum encoder length are removed
+      max_encoder_length: 6                              # how much past to look into
+      min_encoder_length: 4                                 # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
       - SYSTEM                  # grouping might give better averages on grouping
@@ -66,7 +66,7 @@ TrainTestPipelineConfig:
       #Model Parameterts
       accelerator: cpu
       devices: 1
-      max_epochs: 30
+      max_epochs: 5
       gpus: 0
       gradient_clip_val : 0.1                     # clipping gradients is a hyperparameter and important to prevent divergance
                                                  # of the gradient for recurrent neural networks
