@@ -6,6 +6,7 @@ class FeatureEngineering:
         self.data = data
 
 
+
     # todo: Add temperature, holidays, sensex,  covid data from adrian,style id
     # todo: why are product line averages not added and grouped prediction shall be better
 
@@ -33,6 +34,7 @@ class FeatureEngineering:
         #todo: add holidays and also covid data given by Adrian
 
         self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
+
 
 
 

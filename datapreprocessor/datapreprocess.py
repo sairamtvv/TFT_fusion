@@ -90,11 +90,7 @@ class DataPreProcessor:
         self.data = feat_eng_obj.feature_engineer()
 
     def choose_subset_data(self):
-        self.choose_N_or_S()
-        self.choose_data_with_min_timestamps()
-        self.choose_number_of_itemids()
-        self.unforeseen_cut_over_data()
-
+        pass
     def save_filled_dataframe(self):
         "Persisit the dataframe as the mode filling is a time consuming task"
         # todo decide the file name
@@ -103,11 +99,12 @@ class DataPreProcessor:
 
     def preprocess_data(self):
 
-       self.choose_subset_data()
+
 
        self.impute_missing()
        self.feature_engineer()
-       self.real_prediction_fill_missing_vis()
+       self.choose_subset_data()
+       #self.real_prediction_fill_missing_vis()
        # if self.save_imputed_featureengineered_df:
        #     self.save_filled_dataframe()
        return self.data

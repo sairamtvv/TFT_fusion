@@ -38,7 +38,7 @@ TrainTestPipelineConfig:
 
 
       #making time series dataset from the data frame
-      max_prediction_length: 4
+      max_prediction_length: 10
       max_encoder_length: 6                              # how much past to look into
       min_encoder_length: 4                                 # Item_IDS which does not possess minimum encoder length are removed
 

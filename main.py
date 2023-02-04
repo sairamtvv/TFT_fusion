@@ -40,12 +40,20 @@ class FusionForecast():
         self.data = pd.read_csv(self.file_path)
         self.data.reset_index(inplace=True)
 
+
     def impute_missing(self):
         pass
 
     def feature_engineer(self):
         feat_eng_obj = FeatureEngineering(self.data)
         self.data = feat_eng_obj.feature_engineer()
+
+        self.max_prediction_length = self.train_test_config.get_custom_param("structuringdataset")["max_prediction_length"]
+
+        shouldnt_see_data = self.data["time_idx"].max() - self.max_prediction_length
+        self.data = self.data.loc[self.data["time_idx"] < shouldnt_see_data]
+
+
         def get_datetime_string():
             return datetime.datetime.now().strftime("%m-%d-%Y__%H-%M-%S")
 
@@ -110,6 +118,7 @@ if __name__ == "__main__":
         forecast_obj.read_data()
         forecast_obj.impute_missing()
         forecast_obj.feature_engineer()
+
         forecast_obj.train_model()
 
 
