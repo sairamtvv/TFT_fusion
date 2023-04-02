@@ -32,21 +32,21 @@ TrainTestPipelineConfig:
     structuringdataset:
       #encoding and normalization
       categorical_encoding : nanlabelencoder
-      static_numerical_scaler :  standard                           #(standard, minmax, robust, none), this is applied to reals
-      time_varying_unknown_numerical_scaler : standard         #(standard, minmax, robust, none), this is applied to reals
-      time_varying_known_numerical_scaler : standard                #(standard, minmax, robust, none), this is applied to reals
+      static_numerical_scaler :  minmax                           #(standard, minmax, robust, none), this is applied to reals
+      time_varying_unknown_numerical_scaler : minmax         #(standard, minmax, robust, none), this is applied to reals
+      time_varying_known_numerical_scaler : minmax                #(standard, minmax, robust, none), this is applied to reals
 
 
       #making time series dataset from the data frame
-      max_prediction_length: 10
+      max_prediction_length: 4
       max_encoder_length: 6                              # how much past to look into
-      min_encoder_length: 4                                 # Item_IDS which does not possess minimum encoder length are removed
+      min_encoder_length: 6                                # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
       - SYSTEM                  # grouping might give better averages on grouping
       #- STYLE_ID                 # one among PRODUCTLINE or STYLE can be used
      # - PRODUCTLINE              # giving all the three levels to group and predict, not sure if good idea to do it
-      batch_size: 4           #32 was good
+      batch_size: 6           #32 was good
       num_workers: 8         # number of workers (CPUS to use in parallel)
 
     predict_class:
@@ -66,7 +66,7 @@ TrainTestPipelineConfig:
       #Model Parameterts
       accelerator: cpu
       devices: 1
-      max_epochs: 5
+      max_epochs: 3
       gpus: 0
       gradient_clip_val : 0.1                     # clipping gradients is a hyperparameter and important to prevent divergance
                                                  # of the gradient for recurrent neural networks

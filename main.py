@@ -48,10 +48,15 @@ class FusionForecast():
         feat_eng_obj = FeatureEngineering(self.data)
         self.data = feat_eng_obj.feature_engineer()
 
+        mask = self.data["SCREENING_POTENTIAL"] > 10
+        self.data = self.data.loc[mask]
+
         self.max_prediction_length = self.train_test_config.get_custom_param("structuringdataset")["max_prediction_length"]
 
-        shouldnt_see_data = self.data["time_idx"].max() - self.max_prediction_length
-        self.data = self.data.loc[self.data["time_idx"] < shouldnt_see_data]
+
+
+        # shouldnt_see_data = self.data["time_idx"].max() - self.max_prediction_length
+        # self.data = self.data.loc[self.data["time_idx"] < shouldnt_see_data]
 
 
         def get_datetime_string():
