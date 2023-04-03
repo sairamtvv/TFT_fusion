@@ -55,8 +55,8 @@ class FusionForecast():
 
 
 
-        # shouldnt_see_data = self.data["time_idx"].max() - self.max_prediction_length
-        # self.data = self.data.loc[self.data["time_idx"] < shouldnt_see_data]
+        shouldnt_see_data = self.data["time_idx"].max() - self.max_prediction_length
+        self.data = self.data.loc[self.data["time_idx"] < shouldnt_see_data]
 
 
         def get_datetime_string():
