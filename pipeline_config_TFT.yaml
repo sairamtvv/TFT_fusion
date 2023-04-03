@@ -7,7 +7,7 @@ TrainTestPipelineConfig:
 
 
     mlflow_experiment_name: fusion_forecast_not_serious
-    run_name: "first run"     #run_name is  folder name , also run_name for mlflow
+    run_name: "no_overfit1"     #run_name is  folder name , also run_name for mlflow
     run_description: "Please write a description of your run here"           #Please write a description of your run here, why you want to run
     my_custom_tag: checkrun_notserious
     log_every_n_step: 100    #it logs every epoch but after how many steps do you want it to log. if 1 it effects performance
@@ -39,8 +39,8 @@ TrainTestPipelineConfig:
 
       #making time series dataset from the data frame
       max_prediction_length: 4
-      max_encoder_length: 6                              # how much past to look into
-      min_encoder_length: 6                                # Item_IDS which does not possess minimum encoder length are removed
+      max_encoder_length: 8                            # how much past to look into
+      min_encoder_length: 8                              # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
       - SYSTEM                  # grouping might give better averages on grouping
@@ -66,15 +66,15 @@ TrainTestPipelineConfig:
       #Model Parameterts
       accelerator: cpu
       devices: 1
-      max_epochs: 3
+      max_epochs: 100
       gpus: 0
       gradient_clip_val : 0.1                     # clipping gradients is a hyperparameter and important to prevent divergance
                                                  # of the gradient for recurrent neural networks
       learning_rate : 0.001                           #very important
-      hidden_size :  12                            #most important hyperparameter apart from learning rate
-      attention_head_size : 3                   # number of attention heads. Set to up to 4 for large dataset
+      hidden_size :  4                           #most important hyperparameter apart from learning rate
+      attention_head_size : 1                   # number of attention heads. Set to up to 4 for large dataset
       dropout : 0.5                                 #between 0.1 and 0.3 are good values
-      hidden_continuous_size: 6                  # set to <= hidden_size
+      hidden_continuous_size: 2                 # set to <= hidden_size
       output_size: 7                             # number of quantiles to predict, the quantiles to predict are given below
                                                  #loss by default is kept as Quantileloss
 
@@ -90,15 +90,15 @@ TrainTestPipelineConfig:
       - 0.98
 
       log_interval: -1                          #logging  after every log_interval number of batches
-      reduce_on_plateau_patience: 4              #wait for these many epochs during training before reducing the learning rate by a factor
+      reduce_on_plateau_patience: 3             #wait for these many epochs during training before reducing the learning rate by a factor
       reduce_on_plateau_reduction: 2.0          # lr gets divided by this number after the patience
       reduce_on_plateau_min_lr: 0.00001          #dont touch this until in special situations
 
-      weight_decay: 0.01                       #the weight decay or L2 regularization, incase the data is getting over fit
+      weight_decay: 0.001                       #the weight decay or L2 regularization, incase the data is getting over fit
       optimizer: "ranger"                      #choose between(ranger, sgd, adam, adamw)
       share_single_variable_networks: False    # hard or soft sharing between encoder and decoder
 
-      early_stop_callback_monitor: val_MAE      #(val_RMSE etc... can also monitored
+      early_stop_callback_monitor: val_loss      #(val_RMSE etc... can also monitored
       early_stop_callback_min_delta: 0.0001     #min validation error change to consoder for callback
       early_stop_callback_patience: 10         # Number of epochs to wait before stopping the run, if the validation error doesnot improve
 
@@ -143,122 +143,7 @@ TrainTestPipelineConfig:
     EXPERIMENT_NAME: 1_BP_DE_U_PRODUCTLINE
 
 
-    regions:
-      - BP_DE
-  timeframes:
-    train_1: #2018 #updated as per ISO
-      end_date: 30.12.2018
-      historic_date: 02.01.2017
-      reference_date: 31.12.2017
-      start_date: 01.01.2018
-      post_loading_filter:
-        - 'COLL_TYP_NAME == "S"'
 
-    train_2: # 2019
-      end_date: 29.12.2019
-      historic_date: 01.01.2018
-      reference_date: 30.12.2018
-      start_date: 31.12.2018
-      post_loading_filter:
-        - 'COLL_TYP_NAME == "S"'
-
-    train_3: # 2020
-      end_date: 03.01.2021
-      historic_date: 31.12.2018
-      reference_date: 29.12.2019
-      start_date: 30.12.2019
-      post_loading_filter:
-        - 'COLL_TYP_NAME == "S"'
-
-    train_4: #   2021
-      end_date: 02.01.2022
-      historic_date: 06.01.2020
-      reference_date: 03.01.2021
-      start_date: 04.01.2021
-      post_loading_filter:
-        - 'COLL_TYP_NAME == "S"'
-
-
-    #    train_trail_test: #   2022
-    #      end_date: 01.01.2023
-    #      historic_date: 04.01.2021
-    #      reference_date: 02.01.2022
-    #      start_date: 03.01.2022
-    #      post_loading_filter:
-    #        - 'COLL_TYP_NAME == "S"'
-
-
-
-
-
-    #    train_2: # 2020
-    #      historic_date: 31.12.2018
-    #      reference_date: 29.12.2019
-    #      start_date: 30.12.2019
-    #      end_date: 03.01.2021
-    #    train_3: # 2021-H1
-    #      historic_date: 02.01.2020
-    #      reference_date: 31.12.2020
-    #      start_date: 01.01.2021
-    #      end_date: 30.06.2021
-    #
-    #    validation: # 2019-H2
-    #      historic_date: 01.07.2018
-    #      reference_date: 30.06.2019
-    #      start_date: 01.07.2019
-    #      end_date: 29.12.2019
-    #
-    #    test_1: # 2019-H1
-    #      historic_date: 01.01.2018
-    #      reference_date: 30.12.2018
-    #      start_date: 31.12.2018
-    #      end_date: 30.06.2019
-    #    test_2: # 2021-H2
-    #      historic_date: 30.06.2020
-    #      reference_date: 30.06.2021
-    #      start_date: 01.07.2021
-    #      end_date: 31.12.2021
-    #
-    #    real_prediction: # 2022
-    #      historic_date: 21.02.2021
-    #      reference_date: 28.02.2022
-    #      start_date: 01.03.2022
-    #      end_date: 28.02.2023
-#      real_prediction:
-#        end_date: 28.02.2023
-#        historic_date: 21.02.2021
-#        reference_date: 28.02.2022
-#        start_date: 01.03.2022
-#      test_1:
-#        end_date: 30.06.2019
-#        historic_date: 01.01.2018
-#        reference_date: 07.01.2019
-#        start_date: 31.12.2018
-#          test_2:
-#            end_date: 31.12.2021
-#            historic_date: 30.06.2020
-#            reference_date: 30.06.2021
-#            start_date: 01.07.2021
-#      train_1:
-#        end_date: 30.12.2018
-#        historic_date: 02.01.2017
-#        reference_date: 31.12.2017
-#        start_date: 01.01.2018
-#          train_2:
-#            end_date: 03.01.2021
-#            historic_date: 31.12.2018
-#            reference_date: 29.12.2019
-#            start_date: 30.12.2019
-#          train_3:
-#            end_date: 30.06.2021
-#            historic_date: 02.01.2020
-#            reference_date: 31.12.2020
-#            start_date: 01.01.2021
-#      validation:
-#        end_date: 29.12.2019
-#        historic_date: 01.07.2018
-#        reference_date: 30.06.2019
-#        start_date: 01.07.2019
 LoggerConfig:
   log_directory: log
   log_name_prefix: traintest_
