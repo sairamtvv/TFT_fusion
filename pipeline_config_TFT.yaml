@@ -5,7 +5,7 @@ TrainTestPipelineConfig:
 #***************************** MLFLOW ***********************************************************
 
 
-
+    quick_debug: False
     mlflow_experiment_name: fusion_forecast_not_serious
     run_name: "no_overfit1"     #run_name is  folder name , also run_name for mlflow
     run_description: "Please write a description of your run here"           #Please write a description of your run here, why you want to run

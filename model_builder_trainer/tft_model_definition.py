@@ -157,7 +157,7 @@ class TFTModelDefinition():
             accelerator=self.accelerator,
             devices=self.devices,
             max_epochs=self.max_epochs,
-            gpus=self.gpus,
+            # gpus=self.gpus,
             enable_model_summary=True,
             gradient_clip_val=self.gradient_clip_val,
 

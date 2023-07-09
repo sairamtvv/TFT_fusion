@@ -5,10 +5,31 @@ class FeatureEngineering:
     def __init__(self, data):
         self.data = data
 
+    def add_features(self):
+        df['date'] = df['TIMESTAMP'].dt.date
+        df["time_idx"] = (df["date"] - df["date"].min()).dt.days
 
+    # todo: Add date, days bu gk
 
-    # todo: Add temperature, holidays, sensex,  covid data from adrian,style id
-    # todo: why are product line averages not added and grouped prediction shall be better
+    def features_per_day(self):
+
+        df_day = df.loc[df["time_idx"] == day]
+        sum_day_IscRef = df_day["IscRef"].sum()
+        sum_day_IscTest = df_day["IscTest"].sum()
+        difference = sum_day_IscRef - sum_day_IscTest
+        deviation = (sum_day_IscRef - sum_day_IscTest) * 100 / sum_day_IscRef
+        baseline_loss = -0.946
+        soiling_loss = deviation + 0.946
+        lst_IscRef.append(sum_day_IscRef)
+        lst_IscTest.append(sum_day_IscTest)
+        lst_diff.append(difference)
+        lst_percent_dev.append(deviation)
+        lst_percent_soilingloss.append(soiling_loss)
+
+        mean_day_GeffRef = df_day["GeffRef"].mean()
+        mean_day_TempRef = df_day["TempRef"].mean()
+        lst_GeffRef.append(mean_day_GeffRef)
+        lst_TempRef.append(mean_day_TempRef)
 
     #todo: Group by productline, shopass,  seasonality
     # todo: the way averages over item_id and Productline are wrong. There is a leakage here
@@ -34,10 +55,6 @@ class FeatureEngineering:
         #todo: add holidays and also covid data given by Adrian
 
         self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
-
-
-
-
         self.data["METRIC"] = (self.data["YES"] + self.data["NO"]) * (self.data["YES"] - self.data["NO"])
 
         pivoted_data = self.data.pivot(index="YEAR", columns="SYSTEM", values="METRIC")

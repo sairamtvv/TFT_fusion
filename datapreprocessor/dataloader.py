@@ -37,7 +37,8 @@ class  DataLoader:
         # Read the file into a data frame
         if file_path.endswith('.csv') or file_path.endswith('.CSV') or file_path.endswith('.dat'):
 
-            if "Karna" in file_path.split("\\")[-1]:
+            #todo: this works only in linux
+            if "Karna" in file_path.split("/")[-1]:
                 df = pd.read_csv(file_path)
                 sheet_names = "no sheet_name as it is csv"
                 # Drop rows 1, 3, and 4
@@ -134,7 +135,16 @@ class  DataLoader:
                         df[name] = value
 
                 # if len(df.columns) !=8 and "Update_Offset" not in list(df.columns) :
-                #     print(file_path)cd
+                #print(file_path)
+                try:
+                    df['TIMESTAMP'] = pd.to_datetime(df['TIMESTAMP'])
+                except:
+                    df['TIMESTAMP'] = pd.to_datetime(df['TIMESTAMP'], dayfirst=True)
+
+                # Find duplicates and assign second occurrence with second value of 30
+                duplicates = df.duplicated(subset='TIMESTAMP', keep='first')
+                df.loc[duplicates, 'TIMESTAMP'] += pd.Timedelta(seconds=30)
+
                 final_df = pd.concat([final_df, df])
 
         return final_df
