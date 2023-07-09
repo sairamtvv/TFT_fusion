@@ -57,7 +57,7 @@ class SoilingLossForecast():
         #logger.info("loaded the complete data")
 
         #Remove unnecessary rows and columns
-        remove_cols = set(["Ref_Panel_washed", "Update_Offset"]).intersection(set(self.data.columns))
+        remove_cols = set(["Ref_Panel_washed", "Update_Offset", "year_month"]).intersection(set(self.data.columns))
         self.data.drop(columns=list(remove_cols), inplace=True)
         #todo:go deeper into what is getting  dropped
         self.data.dropna(how="any", inplace=True)

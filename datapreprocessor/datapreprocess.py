@@ -45,7 +45,38 @@ class DataPreProcessor:
         # print(f"For {site} after {stage.capitalize()} missing percentage is {missing_percentage} out of {total_rows}")
         # print the percentage of nulls also
 
+    import pandas as pd
 
+    def resample_and_aggregate(self, df):
+        """
+        Resamples a DataFrame at the specified frequency and aggregates columns using specific functions.
+
+        Args:
+            df (pandas.DataFrame): The input DataFrame.
+            frequency (str): The frequency at which to resample the DataFrame (e.g., 'D' for daily).
+
+        Returns:
+            pandas.DataFrame: The resampled and aggregated DataFrame.
+        """
+
+        # Resample the dataframe at the specified frequency
+        resampled_df = df.resample("D")
+
+        # Define the aggregation functions for each column
+        agg_functions = {
+            'GeffRef': 'mean',
+            'GeffTest': 'mean',
+            'IscRef': 'sum',
+            'IscTest': 'sum',
+            'TempRef': 'mean',
+            'TempTest': 'mean'
+            # 'location': 'first'  # Use 'first' or 'last' to retain the constant value
+        }
+
+        # Apply the aggregation functions to the resampled dataframe
+        final_df = resampled_df.agg(agg_functions)
+
+        return final_df
 
     def connvert_to30s_freq(self):
         self.data['TIMESTAMP'] = pd.to_datetime(self.data['TIMESTAMP'])
@@ -69,10 +100,14 @@ class DataPreProcessor:
 
             self.print_info_on_df(site_df, "site" "after filling night data with zero")
 
-            site_df["IscRef"] = site_df["IscRef"].fillna(method='ffill', limit=10)
+
+            #We have to order the index in the ascending order before ffill or bfill
+
+            #site_df.index = site_df.sort_index()
+            site_df = site_df.fillna(method='ffill', limit=10)
             self.print_info_on_df(site_df, site, "after filling with ffill with limit=10")
 
-            site_df["IscRef"] =site_df["IscRef"].fillna(method='bfill', limit=10)
+            site_df =site_df.fillna(method='bfill', limit=10)
             self.print_info_on_df(site_df, site, "after filling with bfill with limit=10")
 
             #todo:Understand and remove this
@@ -83,8 +118,9 @@ class DataPreProcessor:
 
             #apply IscRef threshold
             site_df["IscRef"] = site_df["IscRef"].astype(float)
-            thresh_index = site_df[site_df["IscRef"]<0.6].index
-            site_df.drop(index=thresh_index, inplace=True)
+            site_df = site_df[site_df["IscRef"]>0.6]
+            # thresh_index = site_df[site_df["IscRef"]<0.6].index
+            # site_df.drop(index=thresh_index, inplace=True)
             self.print_info_on_df(site_df, site, "apply Iscref threshold 0.6")
 
             # todo:Understand and remove this  2nd time
@@ -93,8 +129,24 @@ class DataPreProcessor:
             self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
 
 
+            #todo: misisng values comes back similar to IscRef and needs to be addressed
+            numerical_lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest']
+            site_df = site_df[numerical_lst]
+            site_df[numerical_lst] = site_df[numerical_lst].astype(float)
+            site_df.dropna(how="any", inplace=True)
+
+
+            resampled_day_df = self.resample_and_aggregate(site_df)
+
             #Needto fill the nans that are left behind in the other columns
-            self.thirty_sec_df = pd.concat([self.thirty_sec_df, site_df])
+            self.thirty_sec_df = pd.concat([self.thirty_sec_df, resampled_day_df])
+
+
+
+    def  perform_feature_engineering(self):
+
+
+
 
 
     def preprocess_data(self):
