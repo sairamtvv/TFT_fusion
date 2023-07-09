@@ -74,7 +74,7 @@ class SoilingLossForecast():
         preprocessor_obj = DataPreProcessor(self.data, self.train_test_config)
         preprocessor_obj.preprocess_data()
 
-        return preprocessor_obj.thirty_sec_df
+        return preprocessor_obj.resampled_df
 
 
 

@@ -6,7 +6,7 @@ import os
 import pandas as pd
 
 #sys.path.append(str(Path(os.getcwd()).parent.parent))
-
+import numpy as np
 
 
 # from impute_missing import ImputeMissingValues
@@ -69,22 +69,22 @@ class DataPreProcessor:
             'IscRef': 'sum',
             'IscTest': 'sum',
             'TempRef': 'mean',
-            'TempTest': 'mean'
-            # 'location': 'first'  # Use 'first' or 'last' to retain the constant value
-        }
+            'TempTest': 'mean',
+            'location': 'first' # Use 'first' or 'last' to retain the constant value
+             }
 
         # Apply the aggregation functions to the resampled dataframe
         final_df = resampled_df.agg(agg_functions)
 
         return final_df
 
-    def connvert_to30s_freq(self):
+    def prepare_data(self):
         self.data['TIMESTAMP'] = pd.to_datetime(self.data['TIMESTAMP'])
         locations = self.data["location"].unique()[-1]
         locations_lst = []
         locations_lst.append(locations)
 
-        self.thirty_sec_df = pd.DataFrame()
+        self.resampled_df = pd.DataFrame()
         for loc_no, site in enumerate(list(locations_lst)):
             site_df = self.data.loc[self.data["location"] == site].copy()
             total_rows = len(site_df)
@@ -131,27 +131,77 @@ class DataPreProcessor:
 
             #todo: misisng values comes back similar to IscRef and needs to be addressed
             numerical_lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest']
-            site_df = site_df[numerical_lst]
+            # site_df = site_df[numerical_lst]
             site_df[numerical_lst] = site_df[numerical_lst].astype(float)
             site_df.dropna(how="any", inplace=True)
 
 
-            resampled_day_df = self.resample_and_aggregate(site_df)
+            resampled_day_loc_df = self.resample_and_aggregate(site_df)
+
+
+            #making numbers as the index instead og TIMESTAMP
+            resampled_day_loc_df.reset_index(inplace=True)
 
             #Needto fill the nans that are left behind in the other columns
-            self.thirty_sec_df = pd.concat([self.thirty_sec_df, resampled_day_df])
+            self.resampled_df = pd.concat([self.resampled_df, resampled_day_loc_df])
 
 
 
-    def  perform_feature_engineering(self):
+    def asssign_soilingloss(self):
+        self.resampled_df["difference"] =  self.resampled_df["IscRef"] -  self.resampled_df["IscTest"]
+        self.resampled_df["deviation"] = (self.resampled_df["difference"]  * 100) / self.resampled_df["IscRef"]
+        baseline_loss = -0.946
+        self.resampled_df["soiling_loss"] = self.resampled_df["deviation"] - baseline_loss
+
+
+
+
+
+
+
+
+
+    def add_features(self):
+        """Add additional features"""
+
+        # Extract the date from datetime
+        self.resampled_df['date'] = self.resampled_df['TIMESTAMP'].dt.date
+        self.resampled_df["time_idx"] = (self.resampled_df["date"] - self.resampled_df["date"].min()).apply(lambda x: x.days).astype(int)
+
+        #self.resampled_df["log_soiling_loss"] = np.log1p(self.elf.resampled_df["soiling_loss"])
+
+        # todo: This average taken below can have data leakage
+        self.resampled_df["avg_soiling_loss_by_location"] = self.resampled_df.groupby(["time_idx", "location"],
+                                                                observed=True)["soiling_loss"].transform("mean")
+
+
+
+
+    def lagged_features(self):
+        # todo: check this lagged code, there can be a bug
+        # todo: Adding any other useful lag
+        # lag1 feature
+        self.resampled_df = self.resampled_df.set_index(["location"]).sort_values("time_idx")
+        self.resampled_df["soiling_loss_lag_1"] = self.resampled_df["soiling_loss"].shift(periods=1)
+
+        self.resampled_df["soiling_loss_lag_1"].fillna(method='ffill', inplace=True)
+        self.resampled_df["soiling_loss_lag_1"].fillna(method='bfill', inplace=True)
+
+        # lag2 feature
+        self.resampled_df["soiling_loss_lag_2"] = self.resampled_df["soiling_loss"].shift(periods=2)
+        self.resampled_df["soiling_loss_lag_2"].fillna(method='ffill', inplace=True)
+        self.resampled_df["soiling_loss_lag_2"].fillna(method='bfill', inplace=True)
+        self.resampled_df.reset_index(inplace=True)
 
 
 
 
 
     def preprocess_data(self):
-        # Convert 'Timestamp' column to datetime
-        self.connvert_to30s_freq()
+        self.prepare_data()
+        self.asssign_soilingloss()
+        self.add_features()
+        self.lagged_features()
 
 
 
