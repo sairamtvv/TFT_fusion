@@ -26,7 +26,7 @@ import copy
 from itertools import cycle
 import logging
 logger = logging.getLogger(__name__)
-
+import datetime as dt
 
 class EvaluateTFT:
 
@@ -89,7 +89,7 @@ class EvaluateTFT:
         def timeidx_2_date(lst_idx):
             lst_date = []
             for time_idx in lst_idx:
-                date_index = time_idx + self.data["YEAR"].min()
+                date_index = dt.timedelta(days=time_idx) + self.data["date"].min()
                 lst_date.append(date_index)
             return lst_date
 
@@ -121,7 +121,7 @@ class EvaluateTFT:
             # Preparation for plotting the Quantiles
             Quantiles_item = new_pred_raw[0][i, :, :]
 
-            float_itemid = (new_index["SYSTEM"][i])
+            float_itemid = (new_index["location"][i])
             print(f"{float_itemid}  = {mae}")
 
             # # limits in time series to get the forecast for ANN model
@@ -136,7 +136,7 @@ class EvaluateTFT:
             # Create a colour code cycler e.g. 'C0', 'C1', etc.
             colour_codes = map('C{}'.format, cycle(range(10)))
 
-            actual_df =self.data.loc[self.data["SYSTEM"] == float_itemid]
+            actual_df =self.data.loc[self.data["location"] == float_itemid]
 
             # X_Y_Spline = make_interp_spline(actual_df["YEAR"], actual_df['QUANTILE_NORM'])
             # X_ = np.linspace(actual_df["YEAR"].min(), actual_df["YEAR"].max(), 50)
@@ -148,7 +148,7 @@ class EvaluateTFT:
             # Y_ = cubic_interpolation (X_)
             # ax.plot(X_, Y_, linestyle='-', marker='s', color='#55a000', label="ACTUALS")
 
-            ax.plot(actual_df["YEAR"], actual_df['QUANTILE_NORM'], linestyle='-', marker='s', color='#55a000', label="ACTUALS")
+            ax.plot(actual_df["date"], actual_df['soiling_loss'], linestyle='-', marker='s', color='#55a000', label="ACTUALS")
             textstr = f"without visibility cut MAE = {mae}"
             ax.text(0.45, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                     verticalalignment='top')

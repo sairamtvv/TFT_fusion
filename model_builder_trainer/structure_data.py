@@ -70,13 +70,11 @@ class StructuringDataset:
         because_null = ["INPL"]
 
     def get_static_reals(self):
-        static_reals = ['DIFUSION_COEFFICIENT', 'SCREENING_POTENTIAL', 'REPRODUCIBILITY'] + \
-                                   ['DISCREPANCY', 'MEASUREMENT_FLAW']
+        static_reals = []
         return static_reals
 
     def get_time_varying_known_reals(self):
-        #todo: check W_CAMPAIGN_PR and W_CAMPAIGN_CT are they reals are category
-        #todo: Add style_id as category
+        #todo: Add temperature and wind here later
         time_varying_known_reals = []
         return time_varying_known_reals
 
@@ -84,7 +82,7 @@ class StructuringDataset:
         #todo:Do you want to add style id as an  category
         #todo: Add null_info null_cat for category as columns to model_builder_trainer
         #todo: Check if we want to add the cyclical encoding
-        time_varying_known_categoricals = ['SYSTEM']
+        time_varying_known_categoricals = ["REFERENCE_MONTH", "REFERENCE_WEEK"]
 
         return time_varying_known_categoricals
 
@@ -99,9 +97,9 @@ class StructuringDataset:
 
 
     def get_time_varying_unknown_reals(self):
-        time_varying_unknown_reals = ['YES', 'NO', 'Y_AVG', 'X_NORM', 'YT_AVERAGE', 'Z_FACTOR',
-         'SUM_OF_SQUARES',   'DOF_AVG', 'avg_QUANTILE_NORM_by_SYSTEM',
-         'QUANTILE_NORM_lagged_1', 'QUANTILE_NORM_lagged_2']
+        time_varying_unknown_reals = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest',
+       'TempRef', 'TempTest', 'difference', 'deviation',  'avg_soiling_loss_by_location',
+       'soiling_loss_lag_1', 'soiling_loss_lag_2' ]
 
         return time_varying_unknown_reals
 
@@ -117,7 +115,7 @@ class StructuringDataset:
         self.data[self.get_time_varying_known_reals()] = self.data[self.get_time_varying_known_reals()].astype(float).astype("float32")
         self.data[self.get_time_varying_unknown_reals()] = self.data[self.get_time_varying_unknown_reals()].astype(float).astype("float32")
 
-        self.data["QUANTILE_NORM"] = self.data["QUANTILE_NORM"].astype(float).astype("float32")
+        self.data["soiling_loss"] = self.data["soiling_loss"].astype(float).astype("float32")
         self.data['time_idx'] = self.data['time_idx'].apply(np.int64)
         assert(self.data["time_idx"].dtype.kind == "i"), "time_idx must be of type integer (i)"
 
@@ -173,15 +171,15 @@ class StructuringDataset:
         if len(self.group_ids) > 1:
             target_normalizer = GroupNormalizer(groups=self.group_ids, transformation="softplus")
         else:
-            target_normalizer = EncoderNormalizer(method="robust")
+            target_normalizer = EncoderNormalizer()
 
 
 
         training = TimeSeriesDataSet(
             self.data[lambda x: x.time_idx <= training_cutoff],
             time_idx="time_idx",
-            target="QUANTILE_NORM",
-            group_ids=["SYSTEM"],
+            target="soiling_loss",
+            group_ids=["location"],
             #weight="weight",
             min_encoder_length=self.min_encoder_length,
             # keep encoder length long (as it is in the validation set)
@@ -198,7 +196,7 @@ class StructuringDataset:
             time_varying_known_reals=["time_idx"] + self.get_time_varying_known_reals(),
             # time_varying_unknown_categoricals=[],
             time_varying_unknown_reals=[
-                                           'QUANTILE_NORM',
+                                           'soiling_loss',
                                        ] + self.get_time_varying_unknown_reals(),
             allow_missing_timesteps=True,
 

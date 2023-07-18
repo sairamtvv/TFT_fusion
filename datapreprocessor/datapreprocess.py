@@ -70,7 +70,7 @@ class DataPreProcessor:
             'IscTest': 'sum',
             'TempRef': 'mean',
             'TempTest': 'mean',
-            'location': 'first' # Use 'first' or 'last' to retain the constant value
+            #'location': 'first' # Use 'first' or 'last' to retain the constant value
              }
 
         # Apply the aggregation functions to the resampled dataframe
@@ -78,11 +78,56 @@ class DataPreProcessor:
 
         return final_df
 
+
+    def typecast_columns(self):
+
+        self.numerical_lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest']
+        def make_float(num):
+            try:
+                num = float(num)
+            except:
+                num = np.nan
+            return num
+
+        for num_col in self.numerical_lst:
+            self.data[num_col] = self.data[num_col].apply(make_float)
+
+
+        # self.catergorical_lst = ["location"]
+        #
+        # def make_str(cat):
+        #     try:
+        #         cat = float(cat)
+        #     except:
+        #         cat = np.nan
+        #     return cat
+        #
+        # for cat_col in self.catergorical_lst:
+        #     self.data[cat_col] = self.data[cat_col].apply(make_str)
+
+
+    def print_nans_per_day(self, df):
+        """
+        #Assuminf there is a column of date
+
+        Args:
+            df:
+
+        Returns:
+
+        """
+        df = df.copy()
+        df.set_index("date").unstack().isnull().sum()
+
+
+
+
     def prepare_data(self):
+        self.typecast_columns()
         self.data['TIMESTAMP'] = pd.to_datetime(self.data['TIMESTAMP'])
-        locations = self.data["location"].unique()[-1]
-        locations_lst = []
-        locations_lst.append(locations)
+        locations_lst = self.data["location"].unique()
+        # locations_lst = []
+        # locations_lst.append(locations)
 
         self.resampled_df = pd.DataFrame()
         for loc_no, site in enumerate(list(locations_lst)):
@@ -129,15 +174,14 @@ class DataPreProcessor:
             self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
 
 
-            #todo: misisng values comes back similar to IscRef and needs to be addressed
-            numerical_lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest']
-            # site_df = site_df[numerical_lst]
-            site_df[numerical_lst] = site_df[numerical_lst].astype(float)
-            site_df.dropna(how="any", inplace=True)
+            site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
 
+            site_df[self.numerical_lst] = site_df[self.numerical_lst].astype(float)
+
+            
 
             resampled_day_loc_df = self.resample_and_aggregate(site_df)
-
+            resampled_day_loc_df["location"] = site
 
             #making numbers as the index instead og TIMESTAMP
             resampled_day_loc_df.reset_index(inplace=True)
@@ -145,6 +189,7 @@ class DataPreProcessor:
             #Needto fill the nans that are left behind in the other columns
             self.resampled_df = pd.concat([self.resampled_df, resampled_day_loc_df])
 
+        self.resampled_df = self.resampled_df[~self.resampled_df.isna()]
 
 
     def asssign_soilingloss(self):
@@ -166,7 +211,8 @@ class DataPreProcessor:
 
         # Extract the date from datetime
         self.resampled_df['date'] = self.resampled_df['TIMESTAMP'].dt.date
-        self.resampled_df["time_idx"] = (self.resampled_df["date"] - self.resampled_df["date"].min()).apply(lambda x: x.days).astype(int)
+        self.resampled_df["time_idx"] = (self.resampled_df["date"] - self.resampled_df["da"
+                                                                                       "te"].min()).apply(lambda x: x.days).astype(int)
 
         #self.resampled_df["log_soiling_loss"] = np.log1p(self.elf.resampled_df["soiling_loss"])
 
@@ -175,7 +221,8 @@ class DataPreProcessor:
                                                                 observed=True)["soiling_loss"].transform("mean")
 
 
-
+        self.resampled_df["REFERENCE_MONTH"] = self.resampled_df['TIMESTAMP'].dt.month
+        self.resampled_df["REFERENCE_WEEK"]  = self.resampled_df['TIMESTAMP'].dt.isocalendar().week
 
     def lagged_features(self):
         # todo: check this lagged code, there can be a bug
@@ -202,6 +249,7 @@ class DataPreProcessor:
         self.asssign_soilingloss()
         self.add_features()
         self.lagged_features()
+        a = 1
 
 
 

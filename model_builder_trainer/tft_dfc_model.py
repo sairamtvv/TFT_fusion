@@ -59,7 +59,7 @@ class TFTDFCModel():
             lightning_dir = f'{tensorboard_log_dir}/lightning_logs/'
             mlflow.log_artifacts(lightning_dir)
 
-            self.predict(best_model_path)
+            self.predict_new(best_model_path, val_dataloader)
 
             return best_model_path
 
@@ -85,7 +85,9 @@ class TFTDFCModel():
          fig = res.plot(show=True, suggest=True)
          fig.show()
 
-
+    def predict_new(self, best_model_path, val_dataloader):
+        predict_obj = Predict(self.data, self.train_test_config)
+        result_df = predict_obj.predict_new(best_model_path, val_dataloader)
 
 
     def predict(self, best_model_path):

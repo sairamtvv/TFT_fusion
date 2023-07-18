@@ -72,8 +72,8 @@ class Predict:
 
 
     def predict(self, best_model_path, fcst_tmfrm_nm=None):
-        structure_data_obj, training, training_cutoff, train_dataloader, \
-            val_dataloader = self.prepare_data(predict=True)
+        # structure_data_obj, training, training_cutoff, train_dataloader, \
+        #     val_dataloader = self.prepare_data(predict=True)
 
         best_tft = TemporalFusionTransformer.load_from_checkpoint(best_model_path)
 
@@ -121,6 +121,53 @@ class Predict:
         evaluatetft_obj.log_all_prediction_to_mlflow(best_tft, val_dataloader, best_model_path)
 
 
+
+        return result_tft_df
+
+    def predict_new(self, best_model_path,val_dataloader, fcst_tmfrm_nm=None):
+        # structure_data_obj, training, training_cutoff, train_dataloader, \
+        #     val_dataloader = self.prepare_data(predict=True)
+
+        best_tft = TemporalFusionTransformer.load_from_checkpoint(best_model_path)
+
+        new_pred, new_x, new_index = best_tft.predict(val_dataloader, mode="prediction",
+                                                      return_x=True, return_index=True)
+
+        new_pred_raw, new_x_raw, new_index_raw = best_tft.predict(val_dataloader, mode="raw",
+                                                                  return_x=True, return_index=True)
+
+        # todo: Add quantiles to the result_df
+        # todo: Making the actual train_df and merging with the incoming test data
+        # todo: Adding individual plots making ANN as a input parameter
+        # todo: Doing the correct preprocessing for the target data
+        # todo: Write the code for data not in validation data set
+        # todo: actuals_vs_predictions plot, make a directory in images and save
+        # todo: currently time_idx has a standard scalar which is very wrong, remove it
+
+        result_tft_df = self.make_tft_predictions_df(best_tft, val_dataloader, new_pred, new_x, new_index)
+        # result_tft_df = self.get_desired_df_for_gross_forecast(result_tft_df)
+
+        # interpretation
+        interpret_tft_obj = InterpretTFTPostPredict(self.data, self.train_test_config)
+        interpret_tft_obj.interpret_model(best_tft, new_pred_raw)
+        # interpret_tft_obj.partial_dependency(best_tft, val_dataloader, lst_input_feat=None)
+
+        # # Evaluation and comparision with the other models
+        # if fcst_tmfrm_nm is None:
+        #     fcst_tmfrm_nm = "validation"
+
+        # todo: check if self.data contains train+test data by now
+        evaluatetft_obj = EvaluateTFT(self.data, self.train_test_config)
+
+        # evaluatetft_obj.visualize_individual_items(rslts_dict, best_tft, val_dataloader, new_pred_raw, new_x_raw,
+        #                            new_index_raw, new_index, new_x, new_pred)
+
+        evaluatetft_obj.qqplot(result_tft_df)
+
+        evaluatetft_obj.visualize_individual_items(best_tft, val_dataloader, new_pred_raw,
+                                                   new_x_raw,
+                                                   new_index_raw, new_index, new_x, new_pred)
+        evaluatetft_obj.log_all_prediction_to_mlflow(best_tft, val_dataloader, best_model_path)
 
         return result_tft_df
 
@@ -221,7 +268,7 @@ class Predict:
             decoder_length1 = new_x["decoder_time_idx"][i].tolist()
             # print(len(decoder_length1))
             SYSTEM = []
-            SYSTEM.append(new_index["SYSTEM"][i])
+            SYSTEM.append(new_index["location"][i])
             SYSTEM = SYSTEM * self.max_prediction_length
             # *new_x["decoder_time_idx"].size()[1] # multipying by  26
             # print(len(ITEM_ID))

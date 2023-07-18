@@ -41,11 +41,13 @@ class SoilingLossForecast():
 
     def read_data(self):
         if self.train_test_config.get_custom_param("quick_debug"):
-            flder_pth = "Raw_data/AP/P-1_Karnal/Apr-23/"
-            data_loader = DataLoader(flder_pth, append_col=False)
-            self.data = data_loader.read_file("/home/sai/Pictures/TFT_fusion/Raw_data/AP/P-1_Karnal/Apr-23/P1_RawMeasurementData_2023-04-18T18-21.csv")
-            # self.data = data_loader.fetch_df(level_names_lst=["year_month", "location"])
-            #self.data = self.data.iloc[:1000]
+            # flder_pth = "Raw_data/AP/P-1_Karnal/Apr-23/"
+            # data_loader = DataLoader(flder_pth, append_col=False)
+            # self.data = data_loader.read_file("/home/sai/Pictures/TFT_fusion/Raw_data/AP/P-1_Karnal/Apr-23/P1_RawMeasurementData_2023-04-18T18-21.csv")
+
+            self.data = pd.read_pickle("Raw_data/resampled_df_all_locations", compression="zip")
+
+
         else:
             flder_pth = "Raw_data/AP/"
             data_loader = DataLoader(flder_pth, append_col=True)
@@ -68,13 +70,24 @@ class SoilingLossForecast():
 
 
     def main(self, forecast_obj):
-
         forecast_obj.read_data()
+        resampled_df = self.data
 
-        preprocessor_obj = DataPreProcessor(self.data, self.train_test_config)
-        preprocessor_obj.preprocess_data()
+        if not self.train_test_config.get_custom_param("quick_debug"):
+            preprocessor_obj = DataPreProcessor(self.data, self.train_test_config)
+            preprocessor_obj.preprocess_data()
+            resampled_df = preprocessor_obj.resampled_df
+            resampled_df.to_pickle("resampled_df.pkl", compression="zip")
 
-        return preprocessor_obj.resampled_df
+
+        tft_dfc_model_obj = TFTDFCModel(resampled_df, self.train_test_config)
+
+        log_every_n_step = self.train_test_config.get_custom_param("log_every_n_step")
+        log_models = self.train_test_config.get_custom_param("log_models")
+        #mlflow.pytorch.autolog(log_every_n_step=log_every_n_step, log_models=log_models)
+        best_model_path = tft_dfc_model_obj.train()
+
+        return resampled_df
 
 
 
@@ -105,13 +118,7 @@ class SoilingLossForecast():
     #         mlflow.log_artifacts(f"{self.DATA_OUTPUT_DIR}")
     #
     # def train_model(self):
-    #     tft_dfc_model_obj = TFTDFCModel(self.data, self.train_test_config)
-    #
-    #     log_every_n_step = self.train_test_config.get_custom_param("log_every_n_step")
-    #     log_models = self.train_test_config.get_custom_param("log_models")
-    #     mlflow.pytorch.autolog(log_every_n_step=log_every_n_step, log_models=log_models)
-    #     best_model_path = tft_dfc_model_obj.train()
-    #
+
     # def predict(self):
     #     prefict_obj = Predict(self.data, self.train_test_config)
     #

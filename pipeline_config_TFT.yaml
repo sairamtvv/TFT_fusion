@@ -38,15 +38,15 @@ TrainTestPipelineConfig:
 
 
       #making time series dataset from the data frame
-      max_prediction_length: 4
-      max_encoder_length: 8                            # how much past to look into
-      min_encoder_length: 8                              # Item_IDS which does not possess minimum encoder length are removed
+      max_prediction_length: 60
+      max_encoder_length: 15                            # how much past to look into
+      min_encoder_length: 15                             # Item_IDS which does not possess minimum encoder length are removed
 
       group_ids:                  # Add PRODUCTLINE as part of this list, in case we want a group and make predictions on groups
-      - SYSTEM                  # grouping might give better averages on grouping
+      - location                  # grouping might give better averages on grouping
       #- STYLE_ID                 # one among PRODUCTLINE or STYLE can be used
      # - PRODUCTLINE              # giving all the three levels to group and predict, not sure if good idea to do it
-      batch_size: 6           #32 was good
+      batch_size: 16           #32 was good
       num_workers: 8         # number of workers (CPUS to use in parallel)
 
     predict_class:
@@ -66,11 +66,11 @@ TrainTestPipelineConfig:
       #Model Parameterts
       accelerator: cpu
       devices: 1
-      max_epochs: 100
+      max_epochs: 20
       gpus: 0
       gradient_clip_val : 0.1                     # clipping gradients is a hyperparameter and important to prevent divergance
                                                  # of the gradient for recurrent neural networks
-      learning_rate : 0.001                           #very important
+      learning_rate : 0.0001                           #very important
       hidden_size :  4                           #most important hyperparameter apart from learning rate
       attention_head_size : 1                   # number of attention heads. Set to up to 4 for large dataset
       dropout : 0.5                                 #between 0.1 and 0.3 are good values
