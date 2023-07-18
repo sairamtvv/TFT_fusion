@@ -149,15 +149,16 @@ class DataPreProcessor:
             #We have to order the index in the ascending order before ffill or bfill
 
             #site_df.index = site_df.sort_index()
-            site_df = site_df.fillna(method='ffill', limit=10)
+            site_df = site_df.fillna(method='ffill', limit=120)
             self.print_info_on_df(site_df, site, "after filling with ffill with limit=10")
 
-            site_df =site_df.fillna(method='bfill', limit=10)
+            site_df =site_df.fillna(method='bfill', limit=120)
             self.print_info_on_df(site_df, site, "after filling with bfill with limit=10")
 
             #todo:Understand and remove this
             #temporarily making all nans of IscRef to be zero
-            site_df.loc[site_df["IscRef"].isna(),"IscRef"] = 0
+            # site_df.loc[site_df["IscRef"].isna(),self.numerical_lst] = 0
+            site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
             self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
 
 
@@ -168,13 +169,9 @@ class DataPreProcessor:
             # site_df.drop(index=thresh_index, inplace=True)
             self.print_info_on_df(site_df, site, "apply Iscref threshold 0.6")
 
-            # todo:Understand and remove this  2nd time
-            # temporarily making all nans of IscRef to be zero
-            site_df.loc[site_df["IscRef"].isna(), "IscRef"] = 0
-            self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
 
 
-            site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
+            # site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
 
             site_df[self.numerical_lst] = site_df[self.numerical_lst].astype(float)
 
