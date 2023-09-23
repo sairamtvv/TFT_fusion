@@ -4,6 +4,24 @@ import pathlib
 import pandas as pd
 import numpy as np
 import platform
+
+
+def get_file_separator_based_on_OS():
+    # Get the operating system name
+    os_name = platform.system()
+    # Check if the operating system is Windows
+    if os_name == "Windows":
+        print("You are running on a Windows operating system.")
+        return "\\"
+    elif os_name == "Linux":
+        print("You are running on a Linux operating system.")
+        return "/"
+    else:
+        print("You are running on an unknown operating system.")
+
+file_separator = get_file_separator_based_on_OS()
+
+
 class  DataLoader:
 
     def __init__(self, fldr_pth: str, exclude_path_ls:list=[],  append_col:bool = True):
@@ -18,20 +36,8 @@ class  DataLoader:
         self.exclude_path_ls = exclude_path_ls
         self.append_col = append_col
 
-        self.get_file_separator_based_on_OS()
 
-    def get_file_separator_based_on_OS(self):
-        # Get the operating system name
-        os_name = platform.system()
-        # Check if the operating system is Windows
-        if os_name == "Windows":
-            print("You are running on a Windows operating system.")
-            return "\\"
-        elif os_name == "Linux":
-            print("You are running on a Linux operating system.")
-            return "/"
-        else:
-            print("You are running on an unknown operating system.")
+
 
     def read_file(self, file_path):
         """
@@ -43,7 +49,7 @@ class  DataLoader:
         Returns:
 
         """
-        file_separator = self.get_file_separator_based_on_OS()
+
         # Get the file name without the extension
         file_name = file_path.split('/')[-1].split('.')[0]
 
@@ -159,11 +165,28 @@ class  DataLoader:
                 # Find duplicates and assign second occurrence with second value of 30
                 duplicates = df.duplicated(subset='TIMESTAMP', keep='first')
                 df.loc[duplicates, 'TIMESTAMP'] += pd.Timedelta(seconds=30)
-
+                self.print_info_float_cols(file_path, df)
                 final_df = pd.concat([final_df, df])
 
-        return final_df
 
+
+        return final_df
+    def print_info_float_cols(self, file_path, file_df, lst=None):
+        # pathlib_file = pathlib.Path(file_path)
+        # file_nm = pathlib_file.name
+        df = file_df.copy()
+        if not lst:
+            lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest' ]
+
+        for col in lst:
+
+            if df[col].astype(float).isnull().sum() != len(df.loc[df[col]=='NAN']):
+                print(f"{''.join(['**'] * 20)}")
+                print(f"{file_path}")
+                print(f"{col} float_null_count = {df[col].astype(float).isnull().sum()} "
+                      f"{col} object_null_count = {len(df.loc[df[col]=='NAN'])} "
+                      f"{col} float_actual_sum =  {df[col].astype(float).sum()}"
+                      )
 
 if __name__ == "__main__":
     # flder_pth = "C:/Users/gurpreet.kaur/OneDrive - TruBoard Private Limited/Desktop/Raw_data/AP"

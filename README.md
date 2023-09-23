@@ -33,7 +33,21 @@ How did we remove the repeated time stamp values.@gurpreet
    an minute interval
 3) 
 4) 
-    3)
+
 
 Figure out how many days are missing ---- information
- 
+1. Check how many nans in sequence
+   if its for few mins or hrs fill with the average -- give least weightage
+   if for whole day: fill the whole day with the previous day -- give least weightage
+2. First put the values as 0 for night condition and IscRef <= 0.6
+4. Take nan(counts) as a function of date. Decide the threshold 
+and mark the dates where nan are large. They will be given less 
+weights.
+5. For 10 days, take the mean of the whole month for that particular
+time.
+
+-----------------------------------------------------------------
+missing dates 
+missing NAN strings () 
+missing with empty strings (100)
+
