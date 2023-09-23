@@ -150,7 +150,6 @@ class DataPreProcessor:
             self.get_timestamp_gaps(site_df)
 
 
-
             site_df = site_df.asfreq('30S')
             self.print_info_on_df(site_df, site, "after setting 30S frequency")
 
