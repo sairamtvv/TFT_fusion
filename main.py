@@ -40,6 +40,11 @@ class SoilingLossForecast():
             setattr(self, key, value)
 
     def read_data(self):
+        """
+        This reads data from excel using dataloader and converrts to dataframe
+
+        :return:
+        """
         if self.train_test_config.get_custom_param("quick_debug"):
             # flder_pth = "Raw_data/AP/P-1_Karnal/Apr-23/"
             # data_loader = DataLoader(flder_pth, append_col=False)
@@ -62,7 +67,8 @@ class SoilingLossForecast():
         remove_cols = set(["Ref_Panel_washed", "Update_Offset", "year_month"]).intersection(set(self.data.columns))
         self.data.drop(columns=list(remove_cols), inplace=True)
         #todo:go deeper into what is getting  dropped
-        self.data.dropna(how="any", inplace=True)
+        #gurpreettodo:why are we dropping all the NA
+        #self.data.dropna(how="any", inplace=True)
 
         self.data.reset_index(drop=True, inplace=True)
         # self.data.loc[self.data["TIMESTAMP"].isnull()].index
@@ -71,7 +77,7 @@ class SoilingLossForecast():
 
     def main(self, forecast_obj):
         forecast_obj.read_data()
-        resampled_df = self.data
+        resampled_df = self.data.copy()
 
         if not self.train_test_config.get_custom_param("quick_debug"):
             preprocessor_obj = DataPreProcessor(self.data, self.train_test_config)

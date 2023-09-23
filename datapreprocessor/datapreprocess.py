@@ -4,7 +4,8 @@ import logging
 import sys
 import os
 import pandas as pd
-
+import seaborn as sns
+import matplotlib.pyplot as plt
 #sys.path.append(str(Path(os.getcwd()).parent.parent))
 import numpy as np
 
@@ -86,6 +87,7 @@ class DataPreProcessor:
             try:
                 num = float(num)
             except:
+                print(num)
                 num = np.nan
             return num
 
@@ -109,21 +111,28 @@ class DataPreProcessor:
     def print_nans_per_day(self, df):
         """
         #Assuminf there is a column of date
-
         Args:
             df:
-
         Returns:
-
         """
         df = df.copy()
         df.set_index("date").unstack().isnull().sum()
 
 
+    def get_timestamp_gaps(self, site_df, min_gap:int=1):
+        df = site_df.copy()
+        df = df.sort_index(ascending=True)
+        df.reset_index(inplace=True)
+        df['gap'] = (df["TIMESTAMP"].diff() / pd.Timedelta(seconds=30)).sub(1).fillna(0)
+        df = df[df["gap"] > min_gap]
+        value_df = df["gap"].value_counts()
+        sns.histplot(df["gap"], kde=True)
+        plt.scatter(value_df.index, value_df)
+        plt.show()
 
 
     def prepare_data(self):
-        self.typecast_columns()
+        #self.typecast_columns()
         self.data['TIMESTAMP'] = pd.to_datetime(self.data['TIMESTAMP'])
         locations_lst = self.data["location"].unique()
         # locations_lst = []
@@ -136,6 +145,12 @@ class DataPreProcessor:
             self.print_info_on_df(site_df, site, "initial site dataframe")
             site_df.set_index("TIMESTAMP", inplace=True)
             site_df = site_df.loc[~site_df.index.duplicated(keep='first')]
+
+
+            self.get_timestamp_gaps(site_df)
+
+
+
             site_df = site_df.asfreq('30S')
             self.print_info_on_df(site_df, site, "after setting 30S frequency")
 
@@ -175,7 +190,6 @@ class DataPreProcessor:
 
             site_df[self.numerical_lst] = site_df[self.numerical_lst].astype(float)
 
-            
 
             resampled_day_loc_df = self.resample_and_aggregate(site_df)
             resampled_day_loc_df["location"] = site
@@ -259,11 +273,5 @@ class DataPreProcessor:
         # self.feature_engineer()
         # self.choose_subset_data()
         # return self.data
-
-
-
-
-
-
 
 

@@ -3,7 +3,7 @@ import glob
 import pathlib
 import pandas as pd
 import numpy as np
-
+import platform
 class  DataLoader:
 
     def __init__(self, fldr_pth: str, exclude_path_ls:list=[],  append_col:bool = True):
@@ -18,8 +18,20 @@ class  DataLoader:
         self.exclude_path_ls = exclude_path_ls
         self.append_col = append_col
 
+        self.get_file_separator_based_on_OS()
 
-
+    def get_file_separator_based_on_OS(self):
+        # Get the operating system name
+        os_name = platform.system()
+        # Check if the operating system is Windows
+        if os_name == "Windows":
+            print("You are running on a Windows operating system.")
+            return "\\"
+        elif os_name == "Linux":
+            print("You are running on a Linux operating system.")
+            return "/"
+        else:
+            print("You are running on an unknown operating system.")
 
     def read_file(self, file_path):
         """
@@ -31,14 +43,17 @@ class  DataLoader:
         Returns:
 
         """
+        file_separator = self.get_file_separator_based_on_OS()
         # Get the file name without the extension
         file_name = file_path.split('/')[-1].split('.')[0]
 
         # Read the file into a data frame
         if file_path.endswith('.csv') or file_path.endswith('.CSV') or file_path.endswith('.dat'):
 
-            #todo: this works only in linux
-            if "Karna" in file_path.split("/")[-1]:
+
+
+
+            if "Karna" in file_path.split(file_separator)[-1]:
                 df = pd.read_csv(file_path)
                 sheet_names = "no sheet_name as it is csv"
                 # Drop rows 1, 3, and 4
@@ -157,10 +172,10 @@ if __name__ == "__main__":
     # #df = data_loader.fetch_df()
     # a =1
 
-    flder_pth = "C:/Users/gurpreet.kaur/OneDrive - TruBoard Private Limited/Desktop/Raw_data/AP/"
-    data_loader = DataLoader(flder_pth, append_col=True)
-    df = data_loader.fetch_df(level_names_lst=["year_month", "location"])
-    #df = data_loader.fetch_df()
+    flder_pth = "C:/Users/gurpreet.kaur/OneDrive - TruBoard Private Limited/Desktop/Raw_data/AP/P-1_Karnal"
+    data_loader = DataLoader(flder_pth, append_col=False)
+    #df = data_loader.fetch_df(level_names_lst=["year_month", "location"])
+    df = data_loader.fetch_df()
     a =1
 
 
