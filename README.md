@@ -36,18 +36,24 @@ How did we remove the repeated time stamp values.@gurpreet
 
 
 Figure out how many days are missing ---- information
-1. Check how many nans in sequence
-   if its for few mins or hrs fill with the average -- give least weightage
-   if for whole day: fill the whole day with the previous day -- give least weightage
-2. First put the values as 0 for night condition and IscRef <= 0.6
-4. Take nan(counts) as a function of date. Decide the threshold 
+
+1. Missing dates-- taken care after 30s freq sampling
+2. missing empty strings-- filled with str to nan conversion
+3. missing NAN str 
+4. First put the values as 0 for night condition and IscRef <= 0.6 
+5. Take nan(counts) as a function of date. Decide the threshold 
 and mark the dates where nan are large. They will be given less 
-weights.
-5. For 10 days, take the mean of the whole month for that particular
-time.
+weights. 
+   Check how many nans in sequence
+   if its for few mins or hrs: fill with the average -- give least weightage
+   if for whole day: fill the whole day with the previous day -- give least weightage 
+   For 10 days, take the mean of the whole month for that particular time.
+
+hour_limit:  
 
 -----------------------------------------------------------------
-missing dates 
-missing NAN strings () 
-missing with empty strings (100)
+12/3 0.25 filled 
+-----
+convert 30s to hr basis data and then look for NAN in more than 1 day
+how ffill work limit=120
 

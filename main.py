@@ -7,6 +7,7 @@ from datapreprocessor.dataloader import DataLoader
 from datapreprocessor.datapreprocess import DataPreProcessor
 from datapreprocessor.feature_engineer import FeatureEngineering
 
+import pathlib
 import logging
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ import datetime
 
 from icecream import install, ic
 
+from datapreprocessor.impute_missing import ImputeMissingValues
 from model_builder_trainer.tft_dfc_model import TFTDFCModel
 from predict.predict import Predict
 
@@ -23,20 +25,19 @@ ic.configureOutput(includeContext=True, contextAbsPath=False)
 
 
 
-class SoilingLossForecast():
+class SoilingLossForecastor():
 
 
-    def __init__(self, train_test_config):
+    def __init__(self, config):
 
-        self.train_test_config = train_test_config
+        self.config = config
         self.logger = logging.getLogger(__name__)
-        self.DATA_OUTPUT_DIR = Path(os.getcwd()) / "All_data" / self.train_test_config.get_custom_param("run_name")
+        self.DATA_OUTPUT_DIR = Path(os.getcwd()) / "All_data" / self.config.get_custom_param("run_name")
         os.makedirs(self.DATA_OUTPUT_DIR, exist_ok=True)
 
 
         # Parameters imported from YAML file
-
-        for key, value in self.train_test_config.get_custom_param("fusionforecast").items():
+        for key, value in self.config.get_custom_param("fusionforecast").items():
             setattr(self, key, value)
 
     def read_data(self):
@@ -45,18 +46,24 @@ class SoilingLossForecast():
 
         :return:
         """
-        if self.train_test_config.get_custom_param("quick_debug"):
-            # flder_pth = "Raw_data/AP/P-1_Karnal/Apr-23/"
-            # data_loader = DataLoader(flder_pth, append_col=False)
-            # self.data = data_loader.read_file("/home/sai/Pictures/TFT_fusion/Raw_data/AP/P-1_Karnal/Apr-23/P1_RawMeasurementData_2023-04-18T18-21.csv")
+        df_file_name = self.config.get_custom_param("load_data_from_df")
+        if df_file_name:
+            file_path = pathlib.Path(__file__).parent / "Raw_data" / df_file_name
+            data = pd.read_pickle(file_path, compression="zip")
 
-            self.data = pd.read_pickle("Raw_data/resampled_df_all_locations", compression="zip")
+
+        # if self.train_test_config.get_custom_param("quick_debug"):
+        #     # flder_pth = "Raw_data/AP/P-1_Karnal/Apr-23/"
+        #     # data_loader = DataLoader(flder_pth, append_col=False)
+        #     # self.data = data_loader.read_file("/home/sai/Pictures/TFT_fusion/Raw_data/AP/P-1_Karnal/Apr-23/P1_RawMeasurementData_2023-04-18T18-21.csv")
+        #
+        #     self.data = pd.read_pickle("Raw_data/resampled_df_all_locations", compression="zip")
 
 
         else:
             flder_pth = "Raw_data/AP/"
             data_loader = DataLoader(flder_pth, append_col=True)
-            self.data = data_loader.fetch_df(level_names_lst=["year_month", "location"])
+            data = data_loader.fetch_df(level_names_lst=["year_month", "location"])
         #
         # df = data_loader.fetch_df()
         # self.data = pd.read_csv(self.file_path)
@@ -64,32 +71,41 @@ class SoilingLossForecast():
         #logger.info("loaded the complete data")
 
         #Remove unnecessary rows and columns
-        remove_cols = set(["Ref_Panel_washed", "Update_Offset", "year_month"]).intersection(set(self.data.columns))
-        self.data.drop(columns=list(remove_cols), inplace=True)
+        remove_cols = set(["Ref_Panel_washed", "Update_Offset", "year_month"]).intersection(set(data.columns))
+        data.drop(columns=list(remove_cols), inplace=True)
         #todo:go deeper into what is getting  dropped
         #gurpreettodo:why are we dropping all the NA
         #self.data.dropna(how="any", inplace=True)
 
-        self.data.reset_index(drop=True, inplace=True)
+        data.reset_index(drop=True, inplace=True)
         # self.data.loc[self.data["TIMESTAMP"].isnull()].index
+        return data
 
 
 
-    def main(self, forecast_obj):
-        forecast_obj.read_data()
-        resampled_df = self.data.copy()
+    def forecast(self, forecast_obj):
+        #obtain raw_df either reading from a data frame or from datloader reading from excel files
+        data_df = forecast_obj.read_data()
 
-        if not self.train_test_config.get_custom_param("quick_debug"):
-            preprocessor_obj = DataPreProcessor(self.data, self.train_test_config)
+        #replace "NAN strings and missing strings with np.nan
+        missing_imputer_obj = ImputeMissingValues(self.config)
+        data_df = missing_imputer_obj.fill_NAN_and_empty_string_with_npnan(data_df)
+
+
+
+        resampled_df = data_df.copy()
+
+        if not self.config.get_custom_param("quick_debug"):
+            preprocessor_obj = DataPreProcessor(data_df, self.config, missing_imputer_obj)
             preprocessor_obj.preprocess_data()
             resampled_df = preprocessor_obj.resampled_df
             resampled_df.to_pickle("resampled_df.pkl", compression="zip")
 
 
-        tft_dfc_model_obj = TFTDFCModel(resampled_df, self.train_test_config)
+        tft_dfc_model_obj = TFTDFCModel(resampled_df, self.config)
 
-        log_every_n_step = self.train_test_config.get_custom_param("log_every_n_step")
-        log_models = self.train_test_config.get_custom_param("log_models")
+        log_every_n_step = self.config.get_custom_param("log_every_n_step")
+        log_models = self.config.get_custom_param("log_models")
         #mlflow.pytorch.autolog(log_every_n_step=log_every_n_step, log_models=log_models)
         best_model_path = tft_dfc_model_obj.train()
 
@@ -165,8 +181,8 @@ if __name__ == "__main__":
                               "mlflow.note.content": run_description}
                           ):
 
-        forecast_obj = SoilingLossForecast(pipeline_config)
-        forecast_obj.main(forecast_obj)
+        forecast_obj = SoilingLossForecastor(pipeline_config)
+        forecast_obj.forecast(forecast_obj)
 
 
     #************Starts Here *********************************************************

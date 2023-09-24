@@ -165,18 +165,25 @@ class  DataLoader:
                 # Find duplicates and assign second occurrence with second value of 30
                 duplicates = df.duplicated(subset='TIMESTAMP', keep='first')
                 df.loc[duplicates, 'TIMESTAMP'] += pd.Timedelta(seconds=30)
-                self.print_info_float_cols(file_path, df)
+
+
+
+                #self.print_info_float_cols(file_path, df)
                 final_df = pd.concat([final_df, df])
 
 
 
         return final_df
-    def print_info_float_cols(self, file_path, file_df, lst=None):
+    def print_info_float_cols(self, file_path, df, lst=None):
         # pathlib_file = pathlib.Path(file_path)
         # file_nm = pathlib_file.name
-        df = file_df.copy()
+
+
+
+
         if not lst:
             lst = ['GeffRef', 'GeffTest', 'IscRef', 'IscTest', 'TempRef', 'TempTest' ]
+
 
         for col in lst:
 
@@ -187,6 +194,8 @@ class  DataLoader:
                       f"{col} object_null_count = {len(df.loc[df[col]=='NAN'])} "
                       f"{col} float_actual_sum =  {df[col].astype(float).sum()}"
                       )
+
+
 
 if __name__ == "__main__":
     # flder_pth = "C:/Users/gurpreet.kaur/OneDrive - TruBoard Private Limited/Desktop/Raw_data/AP"

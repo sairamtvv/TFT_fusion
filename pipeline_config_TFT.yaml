@@ -14,7 +14,8 @@ TrainTestPipelineConfig:
     log_models: True
 
     is_real_prediction: False
-    run_pipeline_from_dataframe: False                #runs training and prediction from a data frame
+#    load_data_from_df: null
+    load_data_from_df: removed_duplicates_karnal.pkl
 
     datapreprocessor:
 
@@ -25,6 +26,7 @@ TrainTestPipelineConfig:
       file_path: "data/CF_physics_March15_23.csv"
 
     imputemissingvalues:
+
       load_imputed_df: False
       load_imputed_df_name: data/after_fillingna_complete_s.pkl
 

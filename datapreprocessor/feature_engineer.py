@@ -2,14 +2,49 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 class FeatureEngineering:
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, config, resampled_df):
+        self.config = config
+        self.resampled_df = resampled_df
 
+    # todo: Adding weights column and using it for covariate shift
+    def asssign_soilingloss(self):
+        self.resampled_df["difference"] =  self.resampled_df["IscRef"] -  self.resampled_df["IscTest"]
+        self.resampled_df["deviation"] = (self.resampled_df["difference"]  * 100) / self.resampled_df["IscRef"]
+        baseline_loss = -0.946
+        self.resampled_df["soiling_loss"] = self.resampled_df["deviation"] - baseline_loss
     def add_features(self):
-        df['date'] = df['TIMESTAMP'].dt.date
-        df["time_idx"] = (df["date"] - df["date"].min()).dt.days
+        """Add additional features"""
 
-    # todo: Add date, days bu gk
+        # Extract the date from datetime
+        self.resampled_df['date'] = self.resampled_df['TIMESTAMP'].dt.date
+        self.resampled_df["time_idx"] = (self.resampled_df["date"] - self.resampled_df["da"
+                                                                                       "te"].min()).apply(lambda x: x.days).astype(int)
+
+        #self.resampled_df["log_soiling_loss"] = np.log1p(self.elf.resampled_df["soiling_loss"])
+
+        # todo: This average taken below can have data leakage
+        self.resampled_df["avg_soiling_loss_by_location"] = self.resampled_df.groupby(["time_idx", "location"],
+                                                                observed=True)["soiling_loss"].transform("mean")
+
+
+        self.resampled_df["REFERENCE_MONTH"] = self.resampled_df['TIMESTAMP'].dt.month
+        self.resampled_df["REFERENCE_WEEK"]  = self.resampled_df['TIMESTAMP'].dt.isocalendar().week
+
+    def lagged_features(self):
+        # todo: check this lagged code, there can be a bug
+        # todo: Adding any other useful lag
+        # lag1 feature
+        self.resampled_df = self.resampled_df.set_index(["location"]).sort_values("time_idx")
+        self.resampled_df["soiling_loss_lag_1"] = self.resampled_df["soiling_loss"].shift(periods=1)
+
+        self.resampled_df["soiling_loss_lag_1"].fillna(method='ffill', inplace=True)
+        self.resampled_df["soiling_loss_lag_1"].fillna(method='bfill', inplace=True)
+
+        # lag2 feature
+        self.resampled_df["soiling_loss_lag_2"] = self.resampled_df["soiling_loss"].shift(periods=2)
+        self.resampled_df["soiling_loss_lag_2"].fillna(method='ffill', inplace=True)
+        self.resampled_df["soiling_loss_lag_2"].fillna(method='bfill', inplace=True)
+        self.resampled_df.reset_index(inplace=True)
 
     def features_per_day(self):
 
@@ -31,49 +66,6 @@ class FeatureEngineering:
         lst_GeffRef.append(mean_day_GeffRef)
         lst_TempRef.append(mean_day_TempRef)
 
-    #todo: Group by productline, shopass,  seasonality
-    # todo: the way averages over item_id and Productline are wrong. There is a leakage here
-    #todo: Recession should be included
-    #todo: Adding weights column and using it for covariate shift
-
-    def quantile_normalize(self, df):
-        """
-        input: dataframe with numerical columns
-        output: dataframe with quantile normalized values
-        """
-        df_sorted = pd.DataFrame(np.sort(df.values,
-                                         axis=0),
-                                 index=df.index,
-                                 columns=df.columns)
-        df_mean = df_sorted.mean(axis=1)
-        df_mean.index = np.arange(1, len(df_mean) + 1)
-        df_qn = df.rank(method="min").stack().astype(int).map(df_mean).unstack()
-        return (df_qn)
-
-    def add_features(self):
-        """Add additional features"""
-        #todo: add holidays and also covid data given by Adrian
-
-        self.data["time_idx"] = (round(((self.data["YEAR"] - self.data["YEAR"].min())))).astype(int)
-        self.data["METRIC"] = (self.data["YES"] + self.data["NO"]) * (self.data["YES"] - self.data["NO"])
-
-        pivoted_data = self.data.pivot(index="YEAR", columns="SYSTEM", values="METRIC")
-
-
-        quant_norm_pivot_data = self.quantile_normalize(pivoted_data)
-
-        quant_norm_pivot_data["YEAR"] = quant_norm_pivot_data.index
-
-        quant_norm_data = pd.melt(quant_norm_pivot_data, id_vars=['YEAR'], var_name=['SYSTEM'])
-        quant_norm_data.rename({"value": "QUANTILE_NORM"}, axis=1, inplace=True)
-
-        self.data  = pd.merge(quant_norm_data, self.data, how='inner', on=["YEAR", "SYSTEM"])
-
-
-
-        #self.data["log_QUANTILE_NORM"] = np.log1p(self.data.QUANTILE_NORM)
-        self.data["avg_QUANTILE_NORM_by_SYSTEM"] = self.data.groupby(["time_idx", "SYSTEM"],
-                                                  observed=True).QUANTILE_NORM.transform("mean")
 
 
     def check_inf_or_nan(self,  col_lst=None ):
@@ -92,21 +84,6 @@ class FeatureEngineering:
             assert (nans_in_col == 0), f"{col_name} should not have NAN values but {nans_in_col} found"
 
 
-    def lagged_features(self):
-        #todo: check this lagged code, there can be a bug
-        #todo: Adding any other useful lag
-        #lag1 feature
-        self.data = self.data.set_index(["SYSTEM"]).sort_values("time_idx")
-        self.data["QUANTILE_NORM_lagged_1"] = self.data["QUANTILE_NORM"].shift(periods=1)
-
-        self.data["QUANTILE_NORM_lagged_1"].fillna(method='ffill', inplace=True)
-        self.data["QUANTILE_NORM_lagged_1"].fillna(method='bfill', inplace=True)
-
-        # lag2 feature
-        self.data["QUANTILE_NORM_lagged_2"] = self.data["QUANTILE_NORM"].shift(periods=2)
-        self.data["QUANTILE_NORM_lagged_2"].fillna(method='ffill', inplace=True)
-        self.data["QUANTILE_NORM_lagged_2"].fillna(method='bfill', inplace=True)
-        self.data.reset_index(inplace=True)
 
     def feature_engineer(self):
         self.add_features()
