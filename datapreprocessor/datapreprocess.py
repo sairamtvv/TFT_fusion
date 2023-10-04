@@ -111,15 +111,9 @@ class DataPreProcessor:
         #     self.data[cat_col] = self.data[cat_col].apply(make_str)
 
 
-    def print_nans_per_day(self, df):
-        """
-        #Assuminf there is a column of date
-        Args:
-            df:
-        Returns:
-        """
-        df = df.copy()
-        df.set_index("date").unstack().isnull().sum()
+    #def print_nans_per_day(self, df):
+    #    df = df.copy()
+    #    df.set_index("date").unstack().isnull().sum()
 
 
     def get_timestamp_gaps(self, site_df, min_gap:int=1):
@@ -132,6 +126,7 @@ class DataPreProcessor:
         sns.histplot(df["gap"], kde=True)
         plt.scatter(value_df.index, value_df)
         plt.show()
+
 
 
     def prepare_data(self, visualize_plots=False):
@@ -148,11 +143,15 @@ class DataPreProcessor:
             site_df.set_index("TIMESTAMP", inplace=True)
             site_df = site_df.loc[~site_df.index.duplicated(keep='first')]
 
-
+            #todo check if asfreq(30sec) give missing dates also
             site_df = site_df.asfreq('30S')
+            if visualize_plots:
+                self.get_timestamp_gaps(site_df)
+
+
             self.print_info_on_df(site_df, site, "after setting 30S frequency")
             site_df = self.missing_imputer_obj.fill_zeros_during_nighttime(site_df)
-
+            site_df = self.missing_imputer_obj.impute_missing_values(site_df)
 
 
             self.print_info_on_df(site_df, "site" "after filling night data with zero")
@@ -167,8 +166,6 @@ class DataPreProcessor:
             site_df = site_df.fillna(method='bfill', limit=120)
             self.print_info_on_df(site_df, site, "after filling with bfill with limit=10")
 
-            if visualize_plots:
-                self.get_timestamp_gaps(site_df)
 
             #todo:Understand and remove this
             #temporarily making all nans of IscRef to be zero
@@ -211,11 +208,11 @@ class DataPreProcessor:
 
 
     def preprocess_data(self):
-        self.prepare_data(visualize_plots=True)
+        self.prepare_data(visualize_plots=False)
         self.asssign_soilingloss()
         self.add_features()
         self.lagged_features()
-        a = 1
+
 
 
 

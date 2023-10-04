@@ -96,7 +96,7 @@ class SoilingLossForecastor():
         resampled_df = data_df.copy()
 
         if not self.config.get_custom_param("quick_debug"):
-            preprocessor_obj = DataPreProcessor(data_df, self.config, missing_imputer_obj)
+            preprocessor_obj = DataPreProcessor(data_df, self.config,missing_imputer_obj)
             preprocessor_obj.preprocess_data()
             resampled_df = preprocessor_obj.resampled_df
             resampled_df.to_pickle("resampled_df.pkl", compression="zip")

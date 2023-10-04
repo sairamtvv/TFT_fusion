@@ -1,45 +1,35 @@
-# conf.py
+from datetime import datetime
 
-# -- Project information -----------------------------------------------------
 
-project = 'My Documentation'
-author = 'Your Name'
-
-# -- General configuration ---------------------------------------------------
-
-# Add any Sphinx extension module names here, as strings.
 extensions = []
+templates_path = ["_templates"]
+source_suffix = ".rst"
+master_doc = "index"
 
-# The master toctree document.
-master_doc = 'index'
+project = "Alabaster"
+copyright = f"{datetime.now().year} Jeff Forcier"
 
-# -- Options for HTML output -------------------------------------------------
+exclude_patterns = ["_build"]
 
-# Use the default theme.
-html_theme = 'alabaster'
-
-# HTML theme options.
+html_theme = "alabaster"
+html_sidebars = {
+    "**": [
+        "about.html",
+        "navigation.html",
+        "relations.html",
+        "searchbox.html",
+        "donate.html",
+    ]
+}
 html_theme_options = {
-    'logo': 'logo.png',  # You can specify a logo file.
-    'github_user': 'yourusername',
-    'github_repo': 'yourrepository',
-    'github_banner': True,
-    'show_related': False,
+    "description": "A light, configurable Sphinx theme",
+    "github_user": "sphinx-doc",
+    "github_repo": "alabaster",
+    "fixed_sidebar": True,
+    "tidelift_url": "https://tidelift.com/subscription/pkg/pypi-alabaster?utm_source=pypi-alabaster&utm_medium=referral&utm_campaign=docs",  # noqa
 }
 
-# -- Options for LaTeX output ------------------------------------------------
-
-latex_elements = {
-}
-
-# -- Options for manual page output ------------------------------------------
-
-man_pages = [
-    (master_doc, 'mydocumentation', 'My Documentation', [author], 1)
-]
-
-# -- Options for Texinfo output ----------------------------------------------
-
-texinfo_documents = [
-    (master_doc, 'MyDocumentation', 'My Documentation', author, 'MyDocumentation', 'One line description of project.', 'Miscellaneous'),
-]
+extensions.append("releases")
+releases_github_path = "sphinx-doc/alabaster"
+# Our pre-0.x releases are unstable / mix bugs+features
+releases_unstable_prehistory = True

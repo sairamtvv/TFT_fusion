@@ -26,7 +26,7 @@ TrainTestPipelineConfig:
       file_path: "data/CF_physics_March15_23.csv"
 
     imputemissingvalues:
-
+      intraday_nan_count_thrshld: 360
       load_imputed_df: False
       load_imputed_df_name: data/after_fillingna_complete_s.pkl
 
