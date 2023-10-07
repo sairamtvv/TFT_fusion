@@ -18,7 +18,7 @@ TrainTestPipelineConfig:
     load_data_from_df: removed_duplicates_karnal.pkl
 
     datapreprocessor:
-
+      visualize_plots: False
       save_imputed_featureengineered_df: False
       save_imputed_featureengineered_df_filename: data/after_fillingna_complete_s.pkl"
 
@@ -26,7 +26,10 @@ TrainTestPipelineConfig:
       file_path: "data/CF_physics_March15_23.csv"
 
     imputemissingvalues:
-      intraday_nan_count_thrshld: 360
+      intraday_nan_count_thrshld: 720
+      intra_ffill_limit: 360
+
+
       load_imputed_df: False
       load_imputed_df_name: data/after_fillingna_complete_s.pkl
 

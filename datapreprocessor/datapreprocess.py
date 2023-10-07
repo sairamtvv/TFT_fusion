@@ -129,7 +129,7 @@ class DataPreProcessor:
 
 
 
-    def prepare_data(self, visualize_plots=False):
+    def prepare_data(self):
         #self.typecast_columns()
         self.data['TIMESTAMP'] = pd.to_datetime(self.data['TIMESTAMP'])
         locations_lst = self.data["location"].unique()
@@ -145,6 +145,7 @@ class DataPreProcessor:
 
             #todo check if asfreq(30sec) give missing dates also
             site_df = site_df.asfreq('30S')
+            visualize_plots = self.train_test_config.get_custom_param("datapreprocessor")["visualize_plots"]
             if visualize_plots:
                 self.get_timestamp_gaps(site_df)
 
@@ -208,7 +209,7 @@ class DataPreProcessor:
 
 
     def preprocess_data(self):
-        self.prepare_data(visualize_plots=False)
+        self.prepare_data()
         self.asssign_soilingloss()
         self.add_features()
         self.lagged_features()

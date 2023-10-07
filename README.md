@@ -53,23 +53,25 @@ df ->resample 30s freq ->set night as 0 ->find nulls day-wise ->Sum the similar 
 
 Intraday
 1. Make list of days for intraday
-2. Consider the thres of 3 hr. 
+2. Consider the thres of 3 hr (360). 
    Two sets: A) day with < 3hr & B) day with > 3hr.
 3. For A) fill with ffill
    For B) resample the data to hourly basis and then ffill---****
-Interday
-1. resample the data to hourly basis
-2. fill with average from the month 
+
+
+1. If < limit of 3 hr (360) --> ffill
+2. If > 3hr (360) and < 1 day (1440) --> average of previous and next day at that time
+   1 day to 3 days  average of previous day and next day
+3. 4 days to any days --> resample the data to hourly basis, fill with average of the whole month
 
 
 1. if possible with same start and end date -- for all the sites
 2. why greater than 2880
 3. after cutting at night , is the max count of nulls less than 1440
 4. convert 30s to hr basis data and then look for NAN in more than 1 day
-5. Set the fre
+
 -----------------------------------------------------------------
 12/3 0.25 filled 
 -----
 
-how ffill work limit=120
 
