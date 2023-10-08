@@ -152,53 +152,52 @@ class DataPreProcessor:
 
             self.print_info_on_df(site_df, site, "after setting 30S frequency")
             site_df = self.missing_imputer_obj.fill_zeros_during_nighttime(site_df)
+            self.print_info_on_df(site_df, site, "after filling night data with zero")
             site_df = self.missing_imputer_obj.impute_missing_values(site_df)
+            self.print_info_on_df(site_df, site, "after both intra day and interday filling")
 
 
-            self.print_info_on_df(site_df, "site" "after filling night data with zero")
 
 
             #We have to order the index in the ascending order before ffill or bfill
 
             #site_df.index = site_df.sort_index()
-            site_df = site_df.fillna(method='ffill', limit=120)
-            self.print_info_on_df(site_df, site, "after filling with ffill with limit=10")
-
-            site_df = site_df.fillna(method='bfill', limit=120)
-            self.print_info_on_df(site_df, site, "after filling with bfill with limit=10")
+            # site_df = site_df.fillna(method='ffill', limit=120)
+            # self.print_info_on_df(site_df, site, "after filling with ffill with limit=10")
+            #
+            # site_df = site_df.fillna(method='bfill', limit=120)
+            # self.print_info_on_df(site_df, site, "after filling with bfill with limit=10")
 
 
             #todo:Understand and remove this
             #temporarily making all nans of IscRef to be zero
             # site_df.loc[site_df["IscRef"].isna(),self.numerical_lst] = 0
-            site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
-            self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
+            # site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
+            # self.print_info_on_df(site_df, site, "temporarily made iscnan to zero")
 
 
-            #apply IscRef threshold
-            site_df["IscRef"] = site_df["IscRef"].astype(float)
-            site_df = site_df[site_df["IscRef"]>0.6]
+
             # thresh_index = site_df[site_df["IscRef"]<0.6].index
             # site_df.drop(index=thresh_index, inplace=True)
-            self.print_info_on_df(site_df, site, "apply Iscref threshold 0.6")
-
-
-
-            # site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
-
-            site_df[self.numerical_lst] = site_df[self.numerical_lst].astype(float)
-
-
-            resampled_day_loc_df = self.resample_and_aggregate(site_df)
-            resampled_day_loc_df["location"] = site
-
-            #making numbers as the index instead og TIMESTAMP
-            resampled_day_loc_df.reset_index(inplace=True)
-
-            #Needto fill the nans that are left behind in the other columns
-            self.resampled_df = pd.concat([self.resampled_df, resampled_day_loc_df])
-
-        self.resampled_df = self.resampled_df[~self.resampled_df.isna()]
+        #     self.print_info_on_df(site_df, site, "apply Iscref threshold 0.6")
+        #
+        #
+        #
+        #     # site_df[self.numerical_lst] = site_df[self.numerical_lst].fillna(0)
+        #
+        #     site_df[self.numerical_lst] = site_df[self.numerical_lst].astype(float)
+        #
+        #
+        #     resampled_day_loc_df = self.resample_and_aggregate(site_df)
+        #     resampled_day_loc_df["location"] = site
+        #
+        #     #making numbers as the index instead og TIMESTAMP
+        #     resampled_day_loc_df.reset_index(inplace=True)
+        #
+        #     #Needto fill the nans that are left behind in the other columns
+        #     self.resampled_df = pd.concat([self.resampled_df, resampled_day_loc_df])
+        #
+        # self.resampled_df = self.resampled_df[~self.resampled_df.isna()]
 
 
 
